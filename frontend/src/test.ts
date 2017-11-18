@@ -30,6 +30,7 @@ for (const [low, high, d] of data) {
 }
 
 
+
 for (const i of tree) {
     console.log(i)
 }
