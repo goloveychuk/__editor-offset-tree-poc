@@ -6,11 +6,19 @@ import { Tree, Nodee } from './tree'
 interface Data {
     data: any
     offset: number
+    computeIndex(): number
+}
+
+function formatOffset(offset: number) {
+    if (offset <= 0) {
+        return offset.toString()
+    }
+    return `+${offset}`
 }
 
 // set the dimensions and margins of the diagram
-var margin = { top: 40, right: 90, bottom: 50, left: 90 },
-    width = 660 - margin.left - margin.right,
+var margin = { top: 40, right: 10, bottom: 50, left: 90 },
+    width = 860 - margin.left - margin.right,
     height = 500 - margin.top - margin.bottom;
 
 
@@ -64,17 +72,25 @@ function renderTree(containerSelector: string, treeData: Nodee<any>) {
 
     // adds the circle to the node
     node.append("circle")
-        .attr("r", 10);
+        .attr("r", 30);
 
     // adds the text to the node
     node.append("text")
         .attr("dy", ".35em")
-        .attr("y", function (d) { return d.children ? -20 : 20; })
+        // .attr("y", function (d) { return d.children ? -20 : 20; })
+        .attr("y", function (d) { return -10 })
         .style("text-anchor", "middle")
         .text(function (d) { 
             const data = d.data;
-            return `${data.data} (${data.offset})`
-        });
+            return `${data.data}  ${formatOffset(data.offset)}`
+        })
+    node.append('text')
+        .style("text-anchor", "middle")
+        .attr("y", function (d) { return 10 })        
+        .text((d)=>{
+            const data = d.data;
+            return `(${data.computeIndex()})`
+        })
 
 
 }
