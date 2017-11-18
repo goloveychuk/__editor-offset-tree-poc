@@ -33,8 +33,7 @@ export class TextAreaWrapper {
         const target = e.target as HTMLTextAreaElement;
         const range = [target.selectionStart, target.selectionEnd]
         this.viewModel.state.lens('nodes').modify(nodes => {
-            nodes
-            const newNode = new Node(e.data)
+            const newNode = new Node(e.data, 2)
             return nodes.concat([newNode])
         })
         console.log(e)
