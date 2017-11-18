@@ -59,6 +59,11 @@ export class Nodee<T> {
         const newRootOffset = newRoot.offset;
         newRoot.offset += this.offset;
         this.offset = -newRootOffset
+        
+        if (this.right !== undefined) {
+            this.right.offset -= this.offset
+            this.right.parent = this;            
+        }
 
         newRoot.parent = this.parent
         this.parent = newRoot
@@ -76,6 +81,11 @@ export class Nodee<T> {
         newRoot.offset += this.offset
         this.offset = -newRootOffset
 
+        if (this.left !== undefined) {
+            this.left.offset -= this.offset            
+            this.left.parent = this;            
+        }
+        
         newRoot.parent = this.parent
         this.parent = newRoot
 
