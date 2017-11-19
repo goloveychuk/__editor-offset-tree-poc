@@ -1,21 +1,7 @@
-enum BalanceState {
-    UNBALANCED_RIGHT,
-    SLIGHTLY_UNBALANCED_RIGHT,
-    SLIGHTLY_UNBALANCED_LEFT,
-    UNBALANCED_LEFT,
-    BALANCED
-}
-
 
 function getBalanceState(node: Nodee<any>) {
     var heightDifference = node.leftHeight() - node.rightHeight();
-    switch (heightDifference) {
-        case -2: return BalanceState.UNBALANCED_RIGHT;
-        case -1: return BalanceState.SLIGHTLY_UNBALANCED_RIGHT;
-        case 1: return BalanceState.SLIGHTLY_UNBALANCED_LEFT;
-        case 2: return BalanceState.UNBALANCED_LEFT;
-        default: return BalanceState.BALANCED;
-    }
+    return heightDifference
 }
 
 export class Nodee<T> {
@@ -95,8 +81,8 @@ export class Nodee<T> {
     }
     balance() {
         const balanceState = getBalanceState(this);
-        if (balanceState === BalanceState.UNBALANCED_LEFT) {
-            if (getBalanceState(this.left!) === BalanceState.UNBALANCED_RIGHT) {
+        if (balanceState === 2) {
+            if (getBalanceState(this.left!) < 0) {
                 console.log('right left rotate')
                 this.left = this.left!.rotateLeft()
                 return this.rotateRight()
@@ -105,8 +91,8 @@ export class Nodee<T> {
                 return this.rotateRight()
             }
 
-        } else if (balanceState === BalanceState.UNBALANCED_RIGHT) {
-            if (getBalanceState(this.right!) === BalanceState.UNBALANCED_LEFT) {
+        } else if (balanceState === -2) {
+            if (getBalanceState(this.right!) > 0) {
                 console.log('left right rotate')
                 this.right = this.right!.rotateRight()
                 return this.rotateLeft()

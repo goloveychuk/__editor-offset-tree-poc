@@ -38,7 +38,7 @@ function test() {
     const indsArr: number[] = []
 
     function fill() {
-        for (let i = 0; i < 10; i++) {
+        for (let i = 0; i < 100; i++) {
             const ind = Math.ceil(Math.random() * 1000)
             if (inds.has(ind)) {
                 continue
@@ -69,7 +69,7 @@ function test() {
     }
     fill()
     testIndexes()
-    // testBalancing()
+    testBalancing()
 }
 
 test()
