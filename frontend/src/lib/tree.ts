@@ -1,8 +1,4 @@
 
-function getBalanceState(node: Nodee<any>) {
-    var heightDifference = node.leftHeight() - node.rightHeight();
-    return heightDifference
-}
 
 export class Nodee<T> {
     left?: Nodee<T>
@@ -79,10 +75,14 @@ export class Nodee<T> {
         newRoot.height = Math.max(newRoot.leftHeight(), this.height) + 1;
         return newRoot;
     }
+    heightDifference() {
+        var heightDifference = this.leftHeight() - this.rightHeight();
+        return heightDifference
+    }
     balance() {
-        const balanceState = getBalanceState(this);
-        if (balanceState === 2) {
-            if (getBalanceState(this.left!) < 0) {
+        const heightDifference = this.heightDifference();
+        if (heightDifference === 2) {
+            if (this.left!.heightDifference() < 0) {
                 console.log('right left rotate')
                 this.left = this.left!.rotateLeft()
                 return this.rotateRight()
@@ -91,8 +91,8 @@ export class Nodee<T> {
                 return this.rotateRight()
             }
 
-        } else if (balanceState === -2) {
-            if (getBalanceState(this.right!) > 0) {
+        } else if (heightDifference === -2) {
+            if (this.right!.heightDifference() > 0) {
                 console.log('left right rotate')
                 this.right = this.right!.rotateRight()
                 return this.rotateLeft()
