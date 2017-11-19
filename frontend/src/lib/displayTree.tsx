@@ -6,7 +6,7 @@ import { Tree, Nodee } from './tree'
 interface Data {
     data: any
     offset: number
-    computeIndex(): number
+    _testComputeIndex(): number
 }
 
 function formatOffset(offset: number) {
@@ -18,7 +18,7 @@ function formatOffset(offset: number) {
 
 // set the dimensions and margins of the diagram
 var margin = { top: 40, right: 10, bottom: 50, left: 90 },
-    width = 860 - margin.left - margin.right,
+    width = 1560 - margin.left - margin.right,
     height = 500 - margin.top - margin.bottom;
 
 
@@ -89,7 +89,7 @@ function renderTree(containerSelector: string, treeData: Nodee<any>) {
         .attr("y", function (d) { return 10 })        
         .text((d)=>{
             const data = d.data;
-            return `(${data.computeIndex()})`
+            return `(${data._testComputeIndex()})`
         })
 
 
@@ -110,6 +110,11 @@ export class TreeRenderer extends React.Component<Props> {
         }
     }
     render() {
-        return <div id='tree-container' />
+        const {tree} = this.props;
+
+        return <div>
+            {`is balanced: ${tree._testIsBalanced(tree.root)}`}
+            <div id='tree-container' />
+            </div>
     }
 }
