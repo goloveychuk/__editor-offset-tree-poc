@@ -1,8 +1,10 @@
-import { Atom  } from '@grammarly/focal'
-import {Tree} from './lib/tree'
+import { Atom } from '@grammarly/focal'
+import { Tree } from './lib/tree'
 
 export class Inspection {
-    id: number
+    constructor(){
+
+    }
 }
 
 export class TextNode {
@@ -11,8 +13,8 @@ export class TextNode {
 
     inspection?: Inspection
     constructor(text: string) {
-        this.text =text;
-        this.id = Math.random()*100
+        this.text = text;
+        this.id = Math.random() * 100
     }
 }
 
@@ -33,13 +35,13 @@ export class StateModel {
     constructor() {
         this.state = Atom.create(new State())
     }
-    updateTree(updFn: (tree: Tree<TextNode>)=>void) {
+    updateTree(updFn: (tree: Tree<TextNode>) => void) {
         this.state.lens('nodes').modify(_ => {   //todo rm hack
             const tree = this.state.lens('tree').get()
             updFn(tree)
             return tree.toArray()
         })
-        this.state.lens('tree').modify((t)=>{   //todo rm hack
+        this.state.lens('tree').modify((t) => {   //todo rm hack
             const newTree = new Tree<TextNode>()
             newTree.root = t.root;
             newTree.id = t.id + 1
@@ -47,18 +49,29 @@ export class StateModel {
         })
     }
     setText(start: number, end: number, text: string) {
-        this.updateTree(tree=> {
-            const textNode = new TextNode(text)
-            tree.insert(start, end, textNode)
+        this.updateTree(tree => {
+            const p = tree.find(start)
+            if (p === undefined) {
+                const textNode = new TextNode(text)
+                tree.insert(start, end, textNode)
+                return
+            }
+            const newText = replaceRange(p.data!.text, start, end, text)
+            if (newText.length === 0) {
+                p.data!.text = newText //todo                
+                p.remove()
+            } else {
+                p.data!.text = newText
+            }
         })
     }
     addInspection(start: number, end: number, inspection: Inspection) {
-
+        
     }
 
     setupInitial() {
-        this.updateTree(tree=>{
-            
+        this.updateTree(tree => {
+
         })
     }
 }

@@ -73,7 +73,7 @@ function renderTree(containerSelector: string, treeData: Nodee<any>) {
 
     // adds the circle to the node
     node.append("circle")
-        .attr("r", 30);
+        .attr("r", 40);
 
     // adds the text to the node
     node.append("text")

@@ -112,6 +112,10 @@ export class Nodee<T> {
         return Math.max(leftH, rightH) + 1
     }
 
+    remove() {
+        // todo impl
+    }
+
 }
 
 
@@ -165,7 +169,31 @@ export class Tree<T> {
         return root.balance()
         // return root
     }
-
+    find(start: number) {
+        let ind = start;
+        let p = this.root;
+        // let lastP = p;
+        while (p !== undefined) {
+            if (p.offset === ind) {
+                return p
+            }
+            if (ind > p.offset) {
+                ind -= p.offset;
+                if (p.right === undefined) {
+                    return p
+                }
+                p = p.right
+            } else if (ind < p.offset) {
+                ind -= p.offset;        
+                if (p.left === undefined) {
+                    return p
+                }        
+                p = p.left
+            }
+            
+        } 
+        return p
+    }
     [Symbol.iterator]() {
         function* helper(node?: Nodee<T>): IterableIterator<Nodee<T>> {
             if (node === undefined) {

@@ -1,5 +1,3 @@
-import { KeyboardEvent } from 'react';
-
 
 function getStyle(element: HTMLElement, properties: string[]): { [key: string]: string } {
     const cssStyleDeclaration = window.getComputedStyle(element);
@@ -41,7 +39,7 @@ const css = {
         "word-wrap": "break-word",
         overflow: "hidden",
         width: "100%",
-        "z-index": 1000
+        // "z-index": 1000
     },
     textarea: {
         background: "transparent",
@@ -70,6 +68,10 @@ const properties = {
     ],
 };
 
+interface CallbacksType {
+    onKeyDown(e: KeyboardEvent): void
+    onKeyPress(e: KeyboardEvent): void
+}
 
 export class Textoverlay {
     private origStyle: { [key: string]: string };
@@ -80,7 +82,7 @@ export class Textoverlay {
     private textarea: HTMLTextAreaElement;
     private wrapper: HTMLDivElement;
 
-    onChange: (ev: Event) => void;
+    callbacks: CallbacksType
 
     getContainer() {
         return this.overlay
@@ -108,12 +110,12 @@ export class Textoverlay {
         return overlay;
     }
 
-    constructor(textarea: HTMLTextAreaElement, onChange: (ev: Event) => void) {
+    constructor(textarea: HTMLTextAreaElement, callbacks: CallbacksType) {
         const parentElement = textarea.parentElement;
         if (!parentElement) {
             throw new Error("textarea must in DOM tree");
         }
-        this.onChange = onChange
+        this.callbacks = callbacks
         this.origStyle = getStyle(textarea, Object.keys(css.textarea));
 
         this.wrapper = Textoverlay.createWrapper(textarea, parentElement);
@@ -122,7 +124,8 @@ export class Textoverlay {
         setStyle(textarea, css.textarea);
         this.textarea = textarea;
 
-        this.textarea.addEventListener("keypress", this.handleInput);
+        this.textarea.addEventListener("keypress", this.onKeyPress);
+        this.textarea.addEventListener("keydown", this.onKeyDown);
         this.textarea.addEventListener("scroll", this.handleScroll);
         this.observer = new MutationObserver(this.handleResize);
         this.observer.observe(this.textarea, {
@@ -134,7 +137,8 @@ export class Textoverlay {
     }
 
     destroy() {
-        this.textarea.removeEventListener("keypress", this.handleInput);
+        this.textarea.removeEventListener("keypress", this.onKeyPress);
+        this.textarea.removeEventListener("keydown", this.onKeyDown);
         this.textarea.removeEventListener("scroll", this.handleScroll);
         this.observer.disconnect();
 
@@ -157,10 +161,19 @@ export class Textoverlay {
     }
     
 
-    handleInput = (ev: Event) => {
+    onKeyPress = (ev: KeyboardEvent) => {
         this.sync() ///todo
-        this.onChange(ev)
+        this.callbacks.onKeyPress(ev)
     }
+
+    onKeyDown = (ev: KeyboardEvent) => {
+        this.sync() ///todo
+        this.callbacks.onKeyDown(ev)
+    }
+    // handleInput = (ev: Event) => {
+        // this.sync() ///todo
+        // this.onChange(ev)
+    // }
 
     handleScroll = () => {
         this.sync()
