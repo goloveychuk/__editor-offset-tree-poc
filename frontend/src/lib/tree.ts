@@ -4,10 +4,10 @@ export class Nodee<T> {
     left?: Nodee<T>
     right?: Nodee<T>
     parent?: Nodee<T>
-    data: T
+    data?: T
     height = 0
     offset: number
-    constructor(offset: number, data: T) {
+    constructor(offset: number, data?: T) {
         this.offset = offset
         this.data = data
     }
@@ -111,7 +111,7 @@ export class Nodee<T> {
         }
         return Math.max(leftH, rightH) + 1
     }
-    
+
 }
 
 
@@ -119,10 +119,8 @@ export class Tree<T> {
     root?: Nodee<T>
 
     insert(start: number, end: number, data: T) {
-
         this.root = this._insert(this.root, start, data)
-        this.root = this._insert(this.root, end, data)
-
+        this.root = this._insert(this.root, end)
     }
 
     _testInsert(ind: number, data: T) {
@@ -132,7 +130,7 @@ export class Tree<T> {
         if (node === undefined) {
             return true
         }
-        if(node._testHeighForBalancing() === -1) {
+        if (node._testHeighForBalancing() === -1) {
             return false
         }
         return this._testIsBalanced(node.left) && this._testIsBalanced(node.right)
@@ -143,7 +141,7 @@ export class Tree<T> {
     //     }
     //     return this.root._testComputeHeight()
     // }
-    _insert(root: Nodee<T> | undefined, offset: number, data: T): Nodee<T> {
+    _insert(root: Nodee<T> | undefined, offset: number, data?: T): Nodee<T> {
 
 
         if (root === undefined) {
@@ -181,6 +179,15 @@ export class Tree<T> {
             }
         }
         return helper(this.root)
+    }
+    toArray(): T[] {
+        const res = []
+        for (const i of this) {
+            if (i.data !== undefined) {
+                res.push(i.data)
+            }
+        }
+        return res
     }
 }
 

@@ -35,12 +35,13 @@ const css = {
         "box-sizing": "border-box",
         "border-color": "transparent",
         "border-style": "solid",
-        color: "transparent",
+        // color: "transparent",
         position: "absolute",
         "white-space": "pre-wrap",
         "word-wrap": "break-word",
         overflow: "hidden",
         width: "100%",
+        "z-index": 1000
     },
     textarea: {
         background: "transparent",
@@ -121,7 +122,7 @@ export class Textoverlay {
         setStyle(textarea, css.textarea);
         this.textarea = textarea;
 
-        this.textarea.addEventListener("input", this.handleInput);
+        this.textarea.addEventListener("keypress", this.handleInput);
         this.textarea.addEventListener("scroll", this.handleScroll);
         this.observer = new MutationObserver(this.handleResize);
         this.observer.observe(this.textarea, {
@@ -133,7 +134,7 @@ export class Textoverlay {
     }
 
     destroy() {
-        this.textarea.removeEventListener("input", this.handleInput);
+        this.textarea.removeEventListener("keypress", this.handleInput);
         this.textarea.removeEventListener("scroll", this.handleScroll);
         this.observer.disconnect();
 

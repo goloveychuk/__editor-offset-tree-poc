@@ -3,11 +3,12 @@ import { Textoverlay } from './overlay';
 import * as ReactDOM from 'react-dom'
 import * as React from 'react';
 import { Atom } from '@grammarly/focal';
-import {StateModel, Node} from './models';
+import {StateModel} from './models';
 import {TextareaView} from './view';
+import { TreeRenderer } from './lib/displayTree'
 
 interface MyEvent extends Event {
-    data: string
+    key: string
     target: HTMLTextAreaElement
 }
 
@@ -25,6 +26,10 @@ export class TextAreaWrapper {
             <TextareaView state={this.viewModel.state}/>,
             overlay.getContainer()
         )
+        ReactDOM.render(
+            <TreeRenderer tree={this.viewModel.state.lens('tree')}/>,
+            document.getElementById('tree_container') as HTMLElement
+        )
     }
 
 
@@ -32,10 +37,7 @@ export class TextAreaWrapper {
         const e = e_ as MyEvent;
         const target = e.target as HTMLTextAreaElement;
         const range = [target.selectionStart, target.selectionEnd]
-        this.viewModel.state.lens('nodes').modify(nodes => {
-            const newNode = new Node(e.data, 2)
-            return nodes.concat([newNode])
-        })
+        this.viewModel.setText(target.selectionStart, target.selectionEnd, e.key)
         console.log(e)
     }
 }

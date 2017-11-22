@@ -1,10 +1,11 @@
 import * as d3 from 'd3';
 import * as React from 'react';
 import { Tree, Nodee } from './tree'
-
+import { TextNode } from '../models';
+import {Atom, F, lift} from '@grammarly/focal'
 
 interface Data {
-    data: any
+    data?: TextNode
     offset: number
     _testComputeIndex(): number
 }
@@ -30,7 +31,7 @@ function renderTree(containerSelector: string, treeData: Nodee<any>) {
 
     const nodes = d3.tree<Data>()
         .size([width, height])(hierarchy);
-    
+
     // append the svg obgect to the body of the page
     // appends a 'group' element to 'svg'
     // moves the 'group' element to the top left margin
@@ -80,14 +81,14 @@ function renderTree(containerSelector: string, treeData: Nodee<any>) {
         // .attr("y", function (d) { return d.children ? -20 : 20; })
         .attr("y", function (d) { return -10 })
         .style("text-anchor", "middle")
-        .text(function (d) { 
+        .text(function (d) {
             const data = d.data;
-            return `${data.data}  ${formatOffset(data.offset)}`
+            return `${data.data && data.data.text}  ${formatOffset(data.offset)}`
         })
     node.append('text')
         .style("text-anchor", "middle")
-        .attr("y", function (d) { return 10 })        
-        .text((d)=>{
+        .attr("y", function (d) { return 10 })
+        .text((d) => {
             const data = d.data;
             return `(${data._testComputeIndex()})`
         })
@@ -98,23 +99,27 @@ function renderTree(containerSelector: string, treeData: Nodee<any>) {
 
 
 interface Props {
-    tree: Tree<any>
+    tree: Atom<Tree<any>>
 }
+
 
 export class TreeRenderer extends React.Component<Props> {
     componentDidMount() {
-
-        const root = this.props.tree.root;
-        if (root !== undefined) {
-            renderTree("#tree-container", root)
-        }
+        const {tree} = this.props
+        tree.subscribe((tree)=> {    //TODO (move to lift)
+            const {root} = tree;
+            if (root !== undefined) {
+                document.getElementById("tree")!.innerHTML = ""  //TODO
+                renderTree("#tree", root)
+            }
+        })       
     }
     render() {
-        const {tree} = this.props;
+        const { tree } = this.props;
 
         return <div>
-            {`is balanced: ${tree._testIsBalanced(tree.root)}`}
-            <div id='tree-container' />
-            </div>
+            is balanced: <F.span>{tree.view(tree => String(tree._testIsBalanced(tree.root)))}</F.span>
+            <div id='tree' />
+        </div>
     }
 }
