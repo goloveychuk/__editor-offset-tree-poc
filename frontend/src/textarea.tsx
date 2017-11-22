@@ -30,6 +30,7 @@ export class TextAreaWrapper {
             <TreeRenderer tree={this.viewModel.state.lens('tree')}/>,
             document.getElementById('tree_container') as HTMLElement
         )
+        
     }
 
 

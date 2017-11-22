@@ -117,6 +117,7 @@ export class Nodee<T> {
 
 export class Tree<T> {
     root?: Nodee<T>
+    id = 1
 
     insert(start: number, end: number, data: T) {
         this.root = this._insert(this.root, start, data)

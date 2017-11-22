@@ -9,7 +9,7 @@ export class TextNode {
     id: number
     text: string
 
-    inspections: Map<number, Inspection>
+    inspection?: Inspection
     constructor(text: string) {
         this.text =text;
         this.id = Math.random()*100
@@ -26,25 +26,39 @@ export class State {
     nodes: TextNode[] = []
 }
 
-let n = 0;
+
 
 export class StateModel {
     state: Atom<State>
     constructor() {
         this.state = Atom.create(new State())
     }
-    setText(start: number, end: number, text: string) {
+    updateTree(updFn: (tree: Tree<TextNode>)=>void) {
         this.state.lens('nodes').modify(_ => {   //todo rm hack
-            const textNode = new TextNode(text)
             const tree = this.state.lens('tree').get()
-            tree.insert(start, end, textNode)
+            updFn(tree)
             return tree.toArray()
         })
         this.state.lens('tree').modify((t)=>{   //todo rm hack
             const newTree = new Tree<TextNode>()
             newTree.root = t.root;
-            (newTree as any).s = n++
+            newTree.id = t.id + 1
             return newTree
+        })
+    }
+    setText(start: number, end: number, text: string) {
+        this.updateTree(tree=> {
+            const textNode = new TextNode(text)
+            tree.insert(start, end, textNode)
+        })
+    }
+    addInspection(start: number, end: number, inspection: Inspection) {
+
+    }
+
+    setupInitial() {
+        this.updateTree(tree=>{
+            
         })
     }
 }
