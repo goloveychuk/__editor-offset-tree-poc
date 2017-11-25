@@ -1,63 +1,117 @@
-import { Tree, Nodee } from './lib/tree';
+import { buffer } from "rxjs/operators/buffer";
 
 
 
-type Data = string
+const tests = [
+    ['some words seq', 'some other words seq'], // +6
+    ['some words seq', 'some lol seq'], // -5 +3
+    ['some words seq', 'some olohey seq'], // -5 +6
+    ['some words seq', 'some seq'], // -5
 
+    ['words seq', 'some words seq'], //+5 in start
+    ['some words', 'some words seq'], //+4 in end
 
-export const tree = new Tree<Data>()
+    ['some words seq', 'words seq'], //-4 in start
+    ['some words seq', 'some words'], //-4 in end
 
-
-const data: [number, number, Data][] = [
-    [90, 101, 'd'],
-    [10, 20, 'a'],
-    [50, 80, 'c'],
-    [30, 45, 'b'],
-    [15, 16, 'e'],
+    ['', 'some'], //
+    ['some', ''], //
+    ['some', 'some'], //
+    ['', ''], //
+    ['some', 'same'], //
 ]
 
-// for (const [low, high, d] of data) {
-//     tree.insert(low, high, d)
-// }
-function test() {
 
-    const inds = new Map()
-    const indsArr: number[] = []
+type Diff = {
+    start: number
+    end: number
+    text: string
+} | null
 
-    function fill() {
-        for (let i = 0; i < 6; i++) {
-            const ind = Math.ceil(Math.random() * 100)
-            if (inds.has(ind)) {
-                continue
+
+function getDiff(base: string, neww: string): Diff {
+    let lenDiff = neww.length - base.length
+
+    let start = 0
+    let end = 0
+    let baseInd = 0
+    let newInd = 0
+    let text = ''
+    let isDiff = false
+
+    let buf = ''
+
+    while (true) {
+        if (baseInd === base.length && newInd === neww.length) {
+            break
+        }
+        if (!isDiff && base[baseInd] !== neww[newInd]) { //cmp for undefined
+            isDiff = true
+        }
+        if (isDiff) {
+
+            if (lenDiff > 0) {
+                lenDiff -= 1
+                text += neww[newInd]
+                newInd += 1
+            } else if (lenDiff < 0) {
+                lenDiff += 1
+                baseInd += 1
+                end += 1
+            } else {
+                if (base[baseInd] === neww[newInd]) {
+                    buf += neww[newInd]
+                } else {
+                    if (buf.length>0) {
+                        text += buf
+                        end += buf.length
+                        buf = ''
+                    }
+                    end += 1
+                    text += neww[newInd]
+                }
+                newInd += 1
+                baseInd += 1
             }
-            tree._testInsert(ind, '')
-            inds.set(ind, true)
-            indsArr.push(ind)
-        }
-        indsArr.sort((a, b) => a - b)
-    }
-
-    function testIndexes() {
-        let i = 0
-        for (const n of tree) {
-            const ind = n._testComputeIndex()
-            const indCmp = indsArr[i]
-            if (ind !== indCmp) {
-                throw new Error('bad val')
-            }
-            i += 1
+        } else {
+            start += 1
+            end += 1
+            baseInd += 1
+            newInd += 1
         }
     }
 
-    function testBalancing() {
-        if (tree._testIsBalanced(tree.root) === false) {
-            throw new Error('not balanced')
-        }
+    if (start === end && text.length === 0) {
+        return null
     }
-    fill()
-    testIndexes()
-    testBalancing()
-    console.log('success')
+    return { start, end, text }
 }
 
-// test()
+function replaceRange(s: string, start: number, end: number, substitute: string) {
+    return s.substring(0, start) + substitute + s.substring(end);
+}
+
+// if (lenDiff > 0) {
+//     newInd += lenDiff
+// } else if (lenDiff < 0) {
+//     baseInd += Math.abs(lenDiff)
+// }
+
+function runTests() {
+    for (const [base, neww] of tests) {
+        const diff = getDiff(base, neww)
+        console.log(`base="${base}", new="${neww}", ${JSON.stringify(diff)}`)
+        
+        if (diff === null) {
+            if (neww !== base) {
+                throw new Error(`"${neww}", "${base}" should be the same`)            
+            }
+            continue
+        }
+        const newwCalc = replaceRange(base, diff.start, diff.end, diff.text)
+        if (newwCalc !== neww) {
+            throw new Error(`"${newwCalc}" !== "${neww}", base="${base}"`)
+        }
+    }
+}
+runTests()

@@ -2,7 +2,7 @@ import { Atom } from '@grammarly/focal'
 import { Tree } from './lib/tree'
 
 export class Inspection {
-    constructor(){
+    constructor() {
 
     }
 }
@@ -66,7 +66,11 @@ export class StateModel {
         })
     }
     addInspection(start: number, end: number, inspection: Inspection) {
-        
+        this.updateTree(tree => {
+
+            const textNode = new TextNode('asd')
+            tree.insert(start, end, textNode)
+        })
     }
 
     setupInitial() {
