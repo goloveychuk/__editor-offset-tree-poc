@@ -69,8 +69,7 @@ const properties = {
 };
 
 interface CallbacksType {
-    onKeyDown(e: KeyboardEvent): void
-    onKeyPress(e: KeyboardEvent): void
+    onInput(e: KeyboardEvent): void
 }
 
 export class Textoverlay {
@@ -124,8 +123,7 @@ export class Textoverlay {
         setStyle(textarea, css.textarea);
         this.textarea = textarea;
 
-        this.textarea.addEventListener("keypress", this.onKeyPress);
-        this.textarea.addEventListener("keydown", this.onKeyDown);
+        this.textarea.addEventListener("input", this.onInput);
         this.textarea.addEventListener("scroll", this.handleScroll);
         this.observer = new MutationObserver(this.handleResize);
         this.observer.observe(this.textarea, {
@@ -137,8 +135,7 @@ export class Textoverlay {
     }
 
     destroy() {
-        this.textarea.removeEventListener("keypress", this.onKeyPress);
-        this.textarea.removeEventListener("keydown", this.onKeyDown);
+        this.textarea.removeEventListener("input", this.onInput);
         this.textarea.removeEventListener("scroll", this.handleScroll);
         this.observer.disconnect();
 
@@ -161,15 +158,11 @@ export class Textoverlay {
     }
     
 
-    onKeyPress = (ev: KeyboardEvent) => {
+    onInput = (ev: KeyboardEvent) => {
         this.sync() ///todo
-        this.callbacks.onKeyPress(ev)
+        this.callbacks.onInput(ev)
     }
 
-    onKeyDown = (ev: KeyboardEvent) => {
-        this.sync() ///todo
-        this.callbacks.onKeyDown(ev)
-    }
     // handleInput = (ev: Event) => {
         // this.sync() ///todo
         // this.onChange(ev)

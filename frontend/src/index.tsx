@@ -5,15 +5,11 @@ import { TextAreaWrapper } from './textarea'
 import './index.css';
 
 
-import { tree } from './test'
-
-
 
 
 
 ReactDOM.render(<div>
   <textarea cols={100} rows={20}></textarea>
-  <div id="tree_container"></div>
 </div>,
   document.getElementById('root') as HTMLElement
 );
