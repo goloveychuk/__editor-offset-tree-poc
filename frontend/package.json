@@ -4,6 +4,8 @@
   "private": true,
   "dependencies": {
     "@grammarly/focal": "^0.6.434",
+    "@types/classnames": "^2.2.3",
+    "classnames": "^2.2.5",
     "react": "^16.1.0",
     "react-dom": "^16.1.0",
     "react-scripts-ts": "2.8.0",

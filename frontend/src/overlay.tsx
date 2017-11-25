@@ -1,4 +1,5 @@
 
+
 function getStyle(element: HTMLElement, properties: string[]): { [key: string]: string } {
     const cssStyleDeclaration = window.getComputedStyle(element);
     return properties.reduce((acc, property) => {
@@ -68,15 +69,18 @@ const properties = {
     ],
 };
 
+
+
 interface CallbacksType {
     onInput(e: KeyboardEvent): void
+    onCursorPosChange(pos: number): void
 }
 
 export class Textoverlay {
     private origStyle: { [key: string]: string };
     private observer: MutationObserver;
     private wrapperDisplay: string;
-
+    private cursorPos: number
     private overlay: HTMLDivElement;
     private textarea: HTMLTextAreaElement;
     private wrapper: HTMLDivElement;
@@ -122,9 +126,15 @@ export class Textoverlay {
 
         setStyle(textarea, css.textarea);
         this.textarea = textarea;
-
+        this.textarea.spellcheck = false
         this.textarea.addEventListener("input", this.onInput);
         this.textarea.addEventListener("scroll", this.handleScroll);
+
+        this.textarea.addEventListener("click", this.onClick);
+        this.textarea.addEventListener("focus", this.onFocus);
+        this.textarea.addEventListener("keyup", this.onKeyup);
+
+
         this.observer = new MutationObserver(this.handleResize);
         this.observer.observe(this.textarea, {
             attributes: true,
@@ -137,6 +147,11 @@ export class Textoverlay {
     destroy() {
         this.textarea.removeEventListener("input", this.onInput);
         this.textarea.removeEventListener("scroll", this.handleScroll);
+
+        this.textarea.removeEventListener("click", this.onClick);
+        this.textarea.removeEventListener("focus", this.onFocus);
+        this.textarea.removeEventListener("keyup", this.onKeyup);
+
         this.observer.disconnect();
 
         setStyle(this.textarea, this.origStyle);
@@ -149,23 +164,46 @@ export class Textoverlay {
             this.wrapper.remove();
         }
     }
-  
+
 
     sync() {
         setStyle(this.overlay, { top: `${-this.textarea.scrollTop}px` });
         const props = this.wrapperDisplay === "block" ? ["height"] : ["height", "width"];
         setStyle(this.wrapper, getStyle(this.textarea, props));
     }
-    
+
 
     onInput = (ev: KeyboardEvent) => {
         this.sync() ///todo
         this.callbacks.onInput(ev)
     }
 
+    checkCursorPos = () => {
+        const { selectionStart, selectionEnd } = this.textarea;
+        if (selectionStart !== selectionEnd) {
+            return
+        }
+        if (selectionStart !== this.cursorPos) {
+            this.cursorPos = selectionStart
+            this.callbacks.onCursorPosChange(this.cursorPos)
+        }
+    }
+
+    onClick = (ev: MouseEvent) => {
+        this.checkCursorPos()
+    }
+
+    onKeyup = (ev: KeyboardEvent) => {
+        this.checkCursorPos()
+    }
+
+    onFocus = (ev: KeyboardEvent) => {
+        this.checkCursorPos()
+    }
+
     // handleInput = (ev: Event) => {
-        // this.sync() ///todo
-        // this.onChange(ev)
+    // this.sync() ///todo
+    // this.onChange(ev)
     // }
 
     handleScroll = () => {
@@ -173,6 +211,6 @@ export class Textoverlay {
     }
 
     handleResize = () => {
-        this.sync()        
+        this.sync()
     }
 }

@@ -19,6 +19,7 @@ const tests = [
     ['some', 'some'], //
     ['', ''], //
     ['some', 'same'], //
+    ['some', 'some'], //
 ]
 
 

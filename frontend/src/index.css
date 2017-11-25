@@ -23,3 +23,15 @@ body {
   stroke: #ccc;
   stroke-width: 2px;
 }
+
+.inspection {
+  border-bottom: red 3px solid;
+}
+.inspection.selected {
+  background-color: #fcaeae;
+}
+
+
+textarea {
+  font-size: 1.5em;
+}

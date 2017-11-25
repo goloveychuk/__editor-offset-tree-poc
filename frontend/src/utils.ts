@@ -2,14 +2,17 @@
 
 
 
-type Diff = {
+export interface Diff {
     start: number
     end: number
     text: string
-} | null
+} 
 
+interface Ctx {
 
-export function getDiff(base: string, neww: string): Diff {
+}
+
+export function getDiff(base: string, neww: string, ctx?: Ctx): Diff | null {
     let lenDiff = neww.length - base.length
 
     let start = 0
@@ -75,7 +78,7 @@ export function replaceRange(s: string, start: number, end: number, substitute: 
 
 
 
-export function validateDiff(base: string, neww: string, diff: Diff) {
+export function validateDiff(base: string, neww: string, diff: Diff | null) {
     console.log(`base="${base}", new="${neww}", ${JSON.stringify(diff)}`)
     
     if (diff === null) {
