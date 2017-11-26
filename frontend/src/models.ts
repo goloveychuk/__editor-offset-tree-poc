@@ -105,16 +105,16 @@ export class StateModel {
             let res: TextNode[] = []
             let lastInsInd = 0
             for (const ins of inspections) {
-                // if (lastInsInd !== 0) {
-                    res.push(new TextNode(text.substring(lastInsInd, ins.start)))
-                // }
+                if (ins.start !== 0 && lastInsInd === 0) {
+                    res.push(new TextNode(text.substring(0, ins.start)))
+                }
                 const highlighted = cursorPosition >= ins.start && cursorPosition <= ins.end
                 res.push(new TextNode(text.substring(ins.start, ins.end), ins, highlighted))
                 lastInsInd = ins.end;
             }
-            // if (lastInsInd !== text.length-1) {
+            if (lastInsInd !== text.length) {
                 res.push(new TextNode(text.substring(lastInsInd)))
-            // }
+            }
             console.log(res)
             return res
         })
