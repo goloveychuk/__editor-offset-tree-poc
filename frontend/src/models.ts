@@ -3,11 +3,15 @@ import { Tree } from './lib/tree'
 import { getDiff, validateDiff, Diff } from './utils'
 
 
-export class Inspection {
+export enum InspectionType {
+    UnknownWord = 'unknown_word'
+}
 
-    constructor(public start: number, public end: number) {
-
-    }
+export interface Inspection {
+    id: number
+    start: number
+    end: number
+    kind: InspectionType
 }
 
 export class TextNode {
@@ -41,14 +45,14 @@ function offsetInspections(diff: Diff, inspections: Inspection[]): Inspection[] 
         let newEnd = ins.end
         if (diff.start <= ins.start && diff.end <= ins.end) {
             newStart += offset
-            newEnd += offset            
+            newEnd += offset
         } else if (diff.start > ins.start && diff.end < ins.end) {
-            newEnd += offset                        
+            newEnd += offset
         } else {
             return ins
         }
-        return new Inspection(newStart, newEnd)
-        
+        return Object.assign({}, ins, { start: newStart, end: newEnd })
+
     })
     return res
 }
@@ -59,8 +63,20 @@ export class StateModel {
         this.state = Atom.create(new State({ text }))
     }
     addInspection(inspection: Inspection) {
+        this.state.lens('inspections').modify(inspections => {  //todo
+            let ind = 0
+            for (const ins of inspections) {
+                if (inspection.start > ins.start) {
+                    break
+                }
+                ind += 1
+            }
+            return inspections.slice(0, ind).concat([inspection]).concat(inspections.slice(ind))
+        })
+    }
+    removeInspection(id: number) {
         this.state.lens('inspections').modify(inspections => {
-            return [inspection].concat(inspections)
+            return inspections.filter(ins => ins.id !== id) //todo
         })
     }
     setText(newText: string) {
@@ -73,11 +89,35 @@ export class StateModel {
                 return offsetInspections(diff, inspections)
             })
         }
-
         this.state.lens('text').set(newText)
+        return { diff }
     }
     setCurPos(newPos: number) {
         this.state.lens('cursorPosition').set(newPos)
+    }
+
+    getNodes() {
+        return this.state.view(st => ({
+            inspections: st.inspections,
+            text: st.text,
+            cursorPosition: st.cursorPosition,
+        })).view(({ inspections, text, cursorPosition }) => {
+            let res: TextNode[] = []
+            let lastInsInd = 0
+            for (const ins of inspections) {
+                // if (lastInsInd !== 0) {
+                    res.push(new TextNode(text.substring(lastInsInd, ins.start)))
+                // }
+                const highlighted = cursorPosition >= ins.start && cursorPosition <= ins.end
+                res.push(new TextNode(text.substring(ins.start, ins.end), ins, highlighted))
+                lastInsInd = ins.end;
+            }
+            // if (lastInsInd !== text.length-1) {
+                res.push(new TextNode(text.substring(lastInsInd)))
+            // }
+            console.log(res)
+            return res
+        })
     }
 }
 

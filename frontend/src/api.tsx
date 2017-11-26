@@ -1,44 +1,95 @@
+const config = require('./config.json')
+import {Inspection} from './models';
 
-
-enum ServerAction {
-    Add, Delete, Modify
-}
-
-interface AddReq {
-    type: ServerAction.Add
-    pos: number
-    text: string
-}
-
-type Request = AddReq
-
-enum InspectionType {
-    Warning, Error
-}
-
-interface Inspection {
-    type: InspectionType
-    posStart: number
-    posEnd: number
-    text: string
-}
-
-
-interface Resp {
-    newInspections: Inspection[]
-    obsoleteInspections: Inspection[]
-}
-
-
-export class ServerSession {
-    text: string
-    constructor() {
-        var ws = new WebSocket("ws://127.0.0.1:8765")
-        
+export namespace Request {
+    export enum Type {
+        Modify = 'modify'
     }
-    send(req: Request) {
-        
+
+    export interface ModifydReq {
+        type: Type.Modify
+        start: number
+        end: number
+        text: string
     }
+    export type Request = ModifydReq
+}
+
+export namespace Response {
+    export enum Type {
+        AddInspection = 'add_inspection',
+        RemoveInspection = 'remove_inspection',
+        Ok = 'ok'
+    }
+    interface AddInspection extends Inspection {
+        type: Type.AddInspection
+    }
+    interface RemoveInspection {
+        id: number
+        type: Type.RemoveInspection
+    }
+
+    interface Ok {
+        type: Type.Ok
+    }
+
+    export type Response = AddInspection | RemoveInspection | Ok
+}
+
+interface ApiSerializer {
+    serialize(req: Request.Request): string
+    deserialize(resp: string): Response.Response
+}
+
+class JsonSerializer implements ApiSerializer {
+    serialize(req: Request.Request) {
+        return JSON.stringify(req)
+    }
+    deserialize(resp: string): Response.Response {
+        return JSON.parse(resp)
+    }
+}
+
+
+type MsgCb = (resp: Response.Response) => void
+
+export class Api {
+    private ws: WebSocket
+    private connected = false
+
+    private serializer: ApiSerializer = new JsonSerializer()
+
+    constructor(private onConnect:()=>void, private onMsgCb: MsgCb) {
+
+    }
+    connect() {
+        this.ws = new WebSocket(config.api.endpoint)
+        this.ws.onopen = () => {
+            this.connected = true
+            this.onConnect()
+        }
+        this.ws.onclose = () => {
+            this.connected = false
+            setTimeout(()=>{
+                this.connect()
+            }, 1000)
+        }
+        this.ws.onmessage = this.onMessage
+    }
+    send(req: Request.Request) {
+        if (!this.connected) {
+            return false
+        }
+        const msg = this.serializer.serialize(req)
+        this.ws.send(msg)
+        return true
+    }
+    private onMessage = (ev: MessageEvent) => {
+        const resp = this.serializer.deserialize(ev.data)
+        this.onMsgCb(resp)
+    }
+
+
 }
 
 

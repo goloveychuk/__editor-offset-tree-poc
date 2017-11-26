@@ -17,11 +17,14 @@ class Connection:
 
             req = json.loads(data)
 
-            resp = self.client.onRequest(req)
+            resp, many = self.client.onRequest(req)
 
-            resp_data = json.dumps(resp)
+            if not many:
+                resp = [resp]
 
-            await self.socket.send(resp_data)
+            for r in resp:
+                resp_data = json.dumps(r)
+                await self.socket.send(resp_data)
 
 
 
