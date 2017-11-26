@@ -29,6 +29,8 @@ class Client:
     def get_inspections(self):
         all_text = self.state.all_text
         all_found_words = set()
+
+        add_inspections = []
         for start, end in splitWithIndices(all_text):
             word = all_text[start: end]
             all_found_words.add(word)
@@ -38,7 +40,7 @@ class Client:
 
                 self.state.words[word] = res
                 if not word_exists:
-                    yield {'type': 'add_inspection', 'kind': 'unknown_word', 'start': start, 'end': end, 'id': self.idd}
+                    add_inspections.append({'type': 'add_inspection', 'kind': 'unknown_word', 'start': start, 'end': end, 'id': self.idd})
 
                 self.idd+=1
 
@@ -50,6 +52,7 @@ class Client:
             if not ins['exists']:
                 yield {'type': 'remove_inspection', 'id': ins['id']}
 
+        yield from add_inspections
 
     def onRequest(self, req):
         if req['type'] == 'modify':

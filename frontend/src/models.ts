@@ -64,14 +64,17 @@ export class StateModel {
     }
     addInspection(inspection: Inspection) {
         this.state.lens('inspections').modify(inspections => {  //todo
-            let ind = 0
-            for (const ins of inspections) {
-                if (inspection.start > ins.start) {
-                    break
-                }
-                ind += 1
-            }
-            return inspections.slice(0, ind).concat([inspection]).concat(inspections.slice(ind))
+            // let ind = 0
+            // for (const ins of inspections) {
+            //     if (inspection.start > ins.start) {
+            //         break
+            //     }
+            //     ind += 1
+            // }
+            // return inspections.slice(0, ind).concat([inspection]).concat(inspections.slice(ind))
+            const newInspections = [inspection].concat(inspections)
+            newInspections.sort((a,b) => a.start - b.start)
+            return newInspections
         })
     }
     removeInspection(id: number) {
@@ -105,8 +108,8 @@ export class StateModel {
             let res: TextNode[] = []
             let lastInsInd = 0
             for (const ins of inspections) {
-                if (ins.start !== 0 && lastInsInd === 0) {
-                    res.push(new TextNode(text.substring(0, ins.start)))
+                if (ins.start !== lastInsInd) {
+                    res.push(new TextNode(text.substring(lastInsInd, ins.start)))
                 }
                 const highlighted = cursorPosition >= ins.start && cursorPosition <= ins.end
                 res.push(new TextNode(text.substring(ins.start, ins.end), ins, highlighted))

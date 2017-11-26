@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { Atom, reactiveList, ReadOnlyAtom, F, Lens } from '@grammarly/focal';
+import { Atom, reactiveList, ReadOnlyAtom, lift, F, Lens } from '@grammarly/focal';
 import { State, TextNode, StateModel } from './models';
 import * as ClassNames from 'classnames';
 
@@ -34,7 +34,9 @@ export class TextareaView extends React.Component<Props> {
         return <F.span>
             {
                 reactiveList(nodes.view(x => x.map((_, ind) => ind)),
-                ind => <NodeView key={ind} node={nodes.view(Lens.index(ind) as any)} />)
+                ind => {
+                    return <NodeView key={ind} node={nodes.view((n)=>n[ind])} />
+                })
             }
         </F.span>
     }
