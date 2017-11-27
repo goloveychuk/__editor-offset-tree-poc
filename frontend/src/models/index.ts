@@ -74,7 +74,7 @@ export class StateModel {
             // }
             // return inspections.slice(0, ind).concat([inspection]).concat(inspections.slice(ind))
             const newInspections = [inspection].concat(inspections)
-            newInspections.sort((a,b) => a.start - b.start)
+            newInspections.sort((a, b) => a.start - b.start)
             return newInspections
         })
     }
@@ -83,17 +83,17 @@ export class StateModel {
             return inspections.filter(ins => ins.id !== id) //todo
         })
     }
-    setText(newText: string, ctx: {event: InputKeyboardEvent, position: number}) {
-        const text = this.state.lens('text').get()
-
-        const diff = getDiff(text, newText, ctx)
-        // validateDiff(text, newText, diff)
-        if (diff !== null) {
-            this.state.lens('inspections').modify(inspections => {
-                return offsetInspections(diff, inspections)
-            })
-        }
-        this.state.lens('text').set(newText)
+    setText(newText: string, ctx: { event: InputKeyboardEvent, position: number }) {
+        const diff = getDiff(this.state.lens('text').get(), newText, ctx)
+        this.state.modify(state => {
+            const { text, inspections } = state;
+            let newInspections = state.inspections
+            // validateDiff(text, newText, diff)
+            if (diff !== null) {
+                newInspections = offsetInspections(diff, inspections)
+            }
+            return Object.assign({}, state, {text: newText, inspections: newInspections})            
+        })
         return { diff }
     }
     setCurPos(newPos: number) {
