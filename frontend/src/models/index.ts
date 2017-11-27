@@ -83,6 +83,9 @@ export class StateModel {
             return inspections.filter(ins => ins.id !== id) //todo
         })
     }
+    cleanInspections() {
+        this.state.lens('inspections').set([])
+    }
     setText(newText: string, ctx: { event: InputKeyboardEvent, position: number }) {
         const diff = getDiff(this.state.lens('text').get(), newText, ctx)
         this.state.modify(state => {
@@ -100,7 +103,7 @@ export class StateModel {
         this.state.lens('cursorPosition').set(newPos)
     }
 
-    getNodes() {
+    getNodes() { //todo perf, only text, ids
         return this.state.view(st => ({
             inspections: st.inspections,
             text: st.text,

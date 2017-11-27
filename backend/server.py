@@ -7,8 +7,11 @@ import json
 class Connection:
     def __init__(self, socket, inspections):
         self.socket = socket
-        self.client = Client(inspections)
+        self.client = Client(self.send, inspections)
 
+    async def send(self, res):
+        resp_data = json.dumps(res)
+        await self.socket.send(resp_data)
 
 
     async def loop(self):
@@ -17,14 +20,9 @@ class Connection:
 
             req = json.loads(data)
 
-            resp, many = self.client.onRequest(req)
+            self.client.onRequest(req)
 
-            if not many:
-                resp = [resp]
 
-            for r in resp:
-                resp_data = json.dumps(r)
-                await self.socket.send(resp_data)
 
 
 

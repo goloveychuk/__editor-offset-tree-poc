@@ -1,4 +1,5 @@
 import re
+import asyncio
 
 def splitWithIndices(s):
     res = [(m.group(0), m.start(), m.end()) for m in re.finditer(r'[\S\\n]+', s)]
@@ -17,10 +18,21 @@ class State:
 
 
 class Client:
-    def __init__(self, inspections):
+    def __init__(self, send, inspections):
         self.state = State()
         self.inspections = inspections
         self.idd = 1
+        self.send = send
+        self.req_buffer = []
+        loop = asyncio.get_event_loop()
+
+        task = loop.create_task(self.loop())
+
+
+    async def loop(self):
+        while True:
+            await asyncio.sleep(1)
+            await self.processRequests()
 
     def get_inspections(self):
         all_text = self.state.all_text
@@ -51,11 +63,23 @@ class Client:
         yield from add_inspections
 
     def onRequest(self, req):
-        if req['type'] == 'modify':
-            self.state.all_text = self.state.all_text[:req['start']] + req['text'] + self.state.all_text[req['end']:]
-            print(self.state.all_text)
+        self.req_buffer.append(req)
 
-            new_inspections = list(self.get_inspections())
-            return new_inspections, True
 
-        return {'type': 'ok'}, False
+    async def processRequests(self):
+        if not self.req_buffer:
+            return
+
+        for req in self.req_buffer:
+            if req['type'] == 'modify':
+                self.state.all_text = self.state.all_text[:req['start']] + req['text'] + self.state.all_text[req['end']:]
+                print(self.state.all_text)
+
+        new_inspections = list(self.get_inspections())
+        if new_inspections:
+            for ins in new_inspections:
+                await self.send(ins)
+        else:
+            await self.send({'type': 'ok'})
+
+        self.req_buffer = []

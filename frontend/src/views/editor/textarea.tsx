@@ -40,6 +40,7 @@ export class TextAreaWrapper {
     }
 
     onApiConnect = () => { //todo sync
+        this.viewModel.cleanInspections()
         const text = this.viewModel.state.lens('text').get();
         const req: Request.ModifydReq = {start: 0, end: 0, text: text, type: Request.Type.Modify}
         this.api.send(req)        
