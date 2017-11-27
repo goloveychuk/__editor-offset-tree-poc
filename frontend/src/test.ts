@@ -30,10 +30,10 @@ const tests = [
 //     baseInd += Math.abs(lenDiff)
 // }
 
-function runTests() {
-    for (const [base, neww] of tests) {
-        const diff = getDiff(base, neww)
-        validateDiff(base, neww, diff)
-    }
-}
-runTests()
+// function runTests() {
+//     for (const [base, neww] of tests) {
+//         const diff = getDiff(base, neww)
+//         validateDiff(base, neww, diff)
+//     }
+// }
+// runTests()

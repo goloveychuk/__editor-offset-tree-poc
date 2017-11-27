@@ -1,6 +1,6 @@
 import { Atom } from '@grammarly/focal'
 
-import { getDiff, validateDiff, Diff } from '../utils'
+import { getDiff, validateDiff, Diff, InputKeyboardEvent } from '../utils'
 
 
 export enum InspectionType {
@@ -83,10 +83,10 @@ export class StateModel {
             return inspections.filter(ins => ins.id !== id) //todo
         })
     }
-    setText(newText: string) {
+    setText(newText: string, ctx: {event: InputKeyboardEvent, position: number}) {
         const text = this.state.lens('text').get()
 
-        const diff = getDiff(text, newText)
+        const diff = getDiff(text, newText, ctx)
         // validateDiff(text, newText, diff)
         if (diff !== null) {
             this.state.lens('inspections').modify(inspections => {

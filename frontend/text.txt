@@ -1,0 +1,57 @@
+Google has announced the second     generation of its Pixel smartphones, the Pixel 2 and Pixel 2 XL. While the Pixel 2 looks almost identical to its predecessor, the 2 XL has seen some substantial design cha                          nges: it’s jumping from a 5.5-inch display up to a 6-inch display, and that display now covers almost the entire face of the phone. It’s not a perfectly edge-to-edge look, but there are just the trimmest of bezels at the top and bottom of the screen.
+
+The smaller Pixel is sticking with a 5-inch display, squared-off corners, and thick bezels. (Unless you’re looking closely, it’d be hard to tell it apart from the original model.) The only real difference is on the back, where on both new phones the glass accent at the top has been shrunken down, so that it no longer encases the fingerprint sensor (which Google says is the fastest on a smartphone). The Pixel’s camera lens has gotten larger as well, and it now juts out ever so slightly from the back of the phone. The bump is back.
+
+RELATED
+
+Exclusive first look at the Google Pixel 2 and 2 XL
+The spec situation here is pretty straightforward for a 2017 flagship smartphone: both phones have Snapdragon 835 processors, 4GB of RAM, and an option for 64GB or 128GB of storage. They each have front-facing stereo speakers and OLED displays, though the smaller Pixel has a 1080p resolution (for a density of 441 PPI) and the larger version has a 2880 x 1440 resolution (for an even denser 538 PPI). Though there is some bad news this year: the headphone jack is gone.
+
+ GRID VIEW
+
+1 of 34
+Both phones also support “Active Edge,” which means you can squeeze their sides to trigger certain actions. By default, it’ll launch the Google Assistant and silence phone calls. We saw this feature first on HTC’s U11 this summer, and it was... okay. It’s not clear that Google has made squeezable sides dramatically more useful, but they’re not likely to be a drawback, either.
+
+And t                   hen there’s the Pixels’ cameras, which once again seem to be what Google is hoping will set its phones apart. Google’s Mario Queiroz, VP product management, says his team has “reimagined smartphone photography.” They gave the Pixel 2 to DXO for early testing, and the phone apparently got a record-setting score of 98. For context, the iPhone 8 Plus comes in second with a 94.
+
+Both phones have a 12.2-megapixel rear camera with an f/1.8 aperture and optical image stabilization — an improvement over last year’s f/2.0 lens and electronic image stabilization. Those two elements alone could be enough for better photos, but those specs just scratch the surface of what Google has done here.
+
+GOOGLE IS DOING DUAL-CAMERA TRICKS WITH A SINGLE CAMERA
+This year, the camera uses something that Google is calling a “dual-pixel sensor,” which is supposed to literally divide every pixel in two. That means the pixels are a little bit smaller this year (1.4μm instead of last year’s 1.55μm), but there are supposed to be all kinds of benefits from what Google can do with this setup. At the simplest, it’s supposed to allow for faster autofocus. But it also means that Google can offer a “portrait mode,” with a burred background effect just like on the iPhone 7 and 8 Plus, without including a second camera.
+
+That’s because the split pixels act like a second lens, letting the camera capture a second image ever-so-slightly offset from the first. Using that data (and by taking multiple shots, like it does for HDR), Google can create a depth map and use that to help it identify the foreground and background of a photo and blur out everything but the subject. Google says the portrait effect will work on objects, in addition to people, and that it’ll also be enabled on the 8-megapixel front-facing camera, even though it doesn’t have split pixels.
+
+Google is also adding its own version of the iPhone’s Live Photos, here called Motion Photos. They work pretty much exactly the same: Google will record a three-second clip around each photo and bundle it into the file. The phone is supposed to automatically cut out unwanted parts of the clip — so if you immediately stuff it back in your pocket, that theoretically won’t get saved.
+
+Those two features come right from the iPhone, but there’s one thing here that makes the Pixel’s photography experience stand apart: just like last year, all Pixel owners will get to store all of their photos and videos in original quality, forever, on Google Photos. (Google Photos is already free for everyone, but the file size is limited and photos are normally compressed.) That’s a big advantage, as it means buyers won’t be stuck paying for extra cloud storage; it’ll also let buyers offload t               heir photos to the cloud to free up local storage. Queiroz says that Pixel users on average save 23GB of photos and videos each year, so getting free storage is a big benefit.
+
+THERE WILL BE AUGMENTED REALITY STAR WARS STICKERS
+The Pixel camera is also getting support for various augmented reality features — including AR stickers. You’ll be able to add 3D characters and emoji into photos and videos and see them move around as you’re capturing the scene. That includes things like a sleepy coffee cup (it seemed surprisingly cute), but also some recognizable characters. Google is going to be partnering with third parties to add in some famous faces, starting with some cute re-creations of characters from Stranger Things. There are also supposed to be Star Wars stickers on the way.
+
+Google has made some minor tweaks to the phone’s home screen, too. The most notable change is that there’s now a search box at the very bottom of the screen, beneath even the app dock. Up top, there’s now an “at a glance” agenda widget, which displays your upcoming meetings                                    , as well as the date and temperature. It seems nicer than last year’s Google tab and weather widget.
+
+The phone will support an always-on display this year, to show the notifications and time. And this year’s Pixel will take advantage of the phone’s always-on microphones to listen for music (not just the phrase “OK Google”) and display what you’re listening to on the screen, even if it’s something on the radio.
+
+Pixel phones will also be the first to get Google Lens, which was first announced this spring. When you active it, you’ll be able to point the camera at various objects, like books and landmarks, and have Google automatically pull up information on them. It’ll also be able to scan email addresses and Wi-Fi passwords and automatically put that information to use.
+
+The Pixel 2 will come in three colors: white, black, and “kinda blue.” It’s priced at $649 for 64GB of storage and $749 for 128GB. The Pixel 2 XL will be offered in just two colors, black and white, though the white has some nice touches, including a black glass shade on the back and an orange home button. It’ll start at $849 for 64GB and go up to $949 for 128GB.                          Both are supposed to begin shipping by October 17th. Anyon                       e who orders before October 19th will also get sent a promo code to receive a free Home Mini sometime next month.
+
+For an exclusive look at all the new Google devices announced, check out our interview with CEO Sundar Pichai.
+
+IN THIS STORYSTREAM
+
+Google keynote: all of the news from the Pixel 2 event
+3 best and worst features of the Google Pixel 2 and Pixel 2 XL
+Google Pixel 2 and 2 XL announced with water resistance, ‘dual-pixel’ camera, and always-on display
+Google follows Amazon with multi-step smart home routines and kid-friendly accounts
+VIEW ALL 34 STORIES
+NEXT UP IN TECH
+Evidence mounts that laptops are terrible for students at lectures
+Microsoft Office now available on all Chromebooks
+Snapchat now recogni                              zes food, pets, and more when suggesting filters
+Best Buy’s Cyber Monday deals include PS4 Pro discount and price cuts on MacBook Pros and iPads
+eBay’s Cyber Monday deals include the Apple MacBook Pro and the Google Home
+People driving while playing Pokémon Go caused millions in damages in 148 days
+NOW TRENDING
+
+The Substitute Phone is a concept designed to help smartphone addicts

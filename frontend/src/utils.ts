@@ -9,11 +9,43 @@ export interface Diff {
 } 
 
 interface Ctx {
-
+    event: InputKeyboardEvent
+    position: number
 }
 
-export function getDiff(base: string, neww: string, ctx?: Ctx): Diff | null {
+export interface InputKeyboardEvent extends KeyboardEvent {
+    target: HTMLTextAreaElement
+    data: string | null
+    inputType: 'deleteContentBackward' | 'deleteContentForward' | 'insertText' 
+}
+
+function getFastDiff(base: string, neww: string, lenDiff: number, {event, position}: Ctx): Diff | false {
+
+    switch (event.inputType) {
+        case 'insertText':
+            if (lenDiff !== 1) {
+                return false
+            }
+            if (typeof event.data !== 'string') {
+                return false
+            }
+            return {
+                start: position - 1,
+                end: position - 1,
+                text: event.data!,
+            }
+    }
+    return false
+}
+
+export function getDiff(base: string, neww: string, ctx: Ctx): Diff | null {
     let lenDiff = neww.length - base.length
+
+
+    const fastDiff = getFastDiff(base, neww, lenDiff, ctx);
+    if (fastDiff !== false) {
+        return fastDiff
+    }
 
     let start = 0
     let end = 0

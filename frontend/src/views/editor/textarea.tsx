@@ -5,11 +5,8 @@ import * as React from 'react';
 import { Atom } from '@grammarly/focal';
 import { StateModel, Inspection } from '../../models';
 import { TextareaView } from './view';
+import {InputKeyboardEvent} from '../../utils'
 
-interface MyEvent extends Event {
-    key: string
-    target: HTMLTextAreaElement
-}
 
 export class TextAreaWrapper {
     api: Api
@@ -48,10 +45,10 @@ export class TextAreaWrapper {
         this.api.send(req)        
     }
 
-    onInput = (e: KeyboardEvent & {target: HTMLTextAreaElement}) => {
-        const newText = e.target.value;
-        // console.log(e, e.target.selectionStart, e.target.selectionEnd)
-        const {diff} = this.viewModel.setText(newText)
+    onInput = (event: InputKeyboardEvent) => {
+        const newText = event.target.value;
+        const position = event.target.selectionStart;
+        const {diff} = this.viewModel.setText(newText, {event, position})
         if (diff === null) {
             return
         }
