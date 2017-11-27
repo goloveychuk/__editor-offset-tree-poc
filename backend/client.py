@@ -1,13 +1,9 @@
+import re
 
-from itertools import groupby
-
-def splitWithIndices(s, c=' '):
-    p = 0
-    for k, g in groupby(s, lambda x:x==c):
-        q = p + sum(1 for i in g)
-        if not k:
-            yield p, q
-        p = q
+def splitWithIndices(s):
+    res = [(m.group(0), m.start(), m.end()) for m in re.finditer(r'[\S\\n]+', s)]
+    print(res)
+    return res
 
 
 class State:
@@ -31,8 +27,8 @@ class Client:
         all_found_words = set()
 
         add_inspections = []
-        for start, end in splitWithIndices(all_text):
-            word = all_text[start: end]
+        for word, start, end in splitWithIndices(all_text):
+            # word = all_text[start: end]
             all_found_words.add(word)
             if word not in self.state.words:
                 word_exists = self.inspections.words.has(word)

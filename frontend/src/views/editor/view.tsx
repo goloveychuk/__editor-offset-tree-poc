@@ -8,13 +8,16 @@ const NodeView = ({ node }: { node: ReadOnlyAtom<TextNode> }) => {
 
     console.log('rerenderred node')
     const clsname = node.view(n => {
+        if (n === undefined) {  //todo maybe modify renderList to unmount components
+            return ''
+        }
         return ClassNames({
             'inspection': n.inspection !== undefined,
             'selected': n.highlighted
         })
     })
     return <F.span className={clsname}>
-        {node.view('text')}
+        {node.view(n => (n !== undefined) && n.text)}
     </F.span>
 }
 
