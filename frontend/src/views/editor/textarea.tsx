@@ -34,15 +34,17 @@ export class TextAreaWrapper {
                 break;
             case Response.Type.RemoveInspection:
                 this.viewModel.removeInspection(resp.id)     
-            
-
+                break;                
+            case Response.Type.Ok:
+                this.viewModel.revisionsData.okResponse(resp)
+                break;              
         }
     }
 
     onApiConnect = () => { //todo sync
-        this.viewModel.cleanInspections()
+        this.viewModel.reset()
         const text = this.viewModel.state.lens('text').get();
-        const req: Request.ModifydReq = {start: 0, end: 0, text: text, type: Request.Type.Modify}
+        const req: Request.ModifydReq = {start: 0, end: 0, text: text, type: Request.Type.Modify, rev: 0}
         this.api.send(req)        
     }
 
@@ -53,7 +55,7 @@ export class TextAreaWrapper {
         if (diff === null) {
             return
         }
-        const req: Request.ModifydReq = {start: diff.start, end: diff.end, text: diff.text, type: Request.Type.Modify}
+        const req: Request.ModifydReq = {start: diff.start, end: diff.end, text: diff.text, type: Request.Type.Modify, rev: diff.rev}
         this.api.send(req)
     
     }

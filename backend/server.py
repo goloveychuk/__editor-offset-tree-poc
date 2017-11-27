@@ -3,6 +3,7 @@ import asyncio
 import websockets
 from client import Client
 import json
+import time
 
 class Connection:
     def __init__(self, socket, inspections):
@@ -19,8 +20,9 @@ class Connection:
             data = await self.socket.recv()
 
             req = json.loads(data)
+            # time.sleep(1)
 
-            self.client.onRequest(req)
+            await self.client.onRequest(req)
 
 
 

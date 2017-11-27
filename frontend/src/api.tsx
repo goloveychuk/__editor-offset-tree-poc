@@ -2,11 +2,14 @@ const config = require('./config.json')
 import {Inspection} from './models';
 
 export namespace Request {
+    interface BaseReq {
+        rev: number        
+    }
     export enum Type {
         Modify = 'modify'
     }
 
-    export interface ModifydReq {
+    export interface ModifydReq extends BaseReq {
         type: Type.Modify
         start: number
         end: number
@@ -16,20 +19,24 @@ export namespace Request {
 }
 
 export namespace Response {
+    interface BaseResp {
+        rev: number        
+    }
     export enum Type {
         AddInspection = 'add_inspection',
         RemoveInspection = 'remove_inspection',
         Ok = 'ok'
     }
-    interface AddInspection extends Inspection {
+    interface AddInspection extends Inspection, BaseResp {
         type: Type.AddInspection
     }
-    interface RemoveInspection {
+    interface RemoveInspection  extends BaseResp {
         id: number
         type: Type.RemoveInspection
     }
 
-    interface Ok {
+    interface Ok extends BaseResp {
+        rev: number
         type: Type.Ok
     }
 

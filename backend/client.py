@@ -26,15 +26,15 @@ class Client:
         self.req_buffer = []
         loop = asyncio.get_event_loop()
 
-        task = loop.create_task(self.loop())
+        # task = loop.create_task(self.loop())
 
 
-    async def loop(self):
-        while True:
-            await asyncio.sleep(1)
-            await self.processRequests()
+    # async def loop(self):
+    #     while True:
+    #         await asyncio.sleep(1)
+    #         await self.processRequests()
 
-    def get_inspections(self):
+    def get_inspections(self, rev):
         all_text = self.state.all_text
         all_found_words = set()
 
@@ -48,7 +48,7 @@ class Client:
 
                 self.state.words[word] = res
                 if not word_exists:
-                    add_inspections.append({'type': 'add_inspection', 'kind': 'unknown_word', 'start': start, 'end': end, 'id': self.idd})
+                    add_inspections.append({'type': 'add_inspection', 'kind': 'unknown_word', 'start': start, 'end': end, 'id': self.idd, 'rev': rev})
 
                 self.idd+=1
 
@@ -62,24 +62,17 @@ class Client:
 
         yield from add_inspections
 
-    def onRequest(self, req):
-        self.req_buffer.append(req)
+    async def onRequest(self, req):
 
+        if req['type'] == 'modify':
+            self.state.all_text = self.state.all_text[:req['start']] + req['text'] + self.state.all_text[req['end']:]
+            # print(self.state.all_text)
 
-    async def processRequests(self):
-        if not self.req_buffer:
-            return
-
-        for req in self.req_buffer:
-            if req['type'] == 'modify':
-                self.state.all_text = self.state.all_text[:req['start']] + req['text'] + self.state.all_text[req['end']:]
-                print(self.state.all_text)
-
-        new_inspections = list(self.get_inspections())
+        new_inspections = list(self.get_inspections(req['rev']))
         if new_inspections:
             for ins in new_inspections:
                 await self.send(ins)
         else:
-            await self.send({'type': 'ok'})
+            await self.send({'type': 'ok', 'rev': req['rev']})
 
         self.req_buffer = []

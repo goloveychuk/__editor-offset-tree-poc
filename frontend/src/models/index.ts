@@ -12,6 +12,7 @@ export interface Inspection {
     start: number
     end: number
     kind: InspectionType
+    rev: number
 }
 
 export class TextNode {
@@ -29,7 +30,8 @@ export class TextNode {
 
 export class State {
     inspections: Inspection[] = []
-    // nodes: TextNode[] = []
+
+    
     text: string
     cursorPosition: number
     constructor({ text }: { text: string }) {
@@ -37,6 +39,7 @@ export class State {
     }
     // nodes: TextNode[] = []
 }
+
 
 function offsetInspections(diff: Diff, inspections: Inspection[]): Inspection[] {
     const offset = diff.text.length - (diff.end - diff.start);
@@ -57,14 +60,52 @@ function offsetInspections(diff: Diff, inspections: Inspection[]): Inspection[] 
     })
     return res
 }
+interface DiffWithRev extends Diff {
+    rev: number
+}
+class RevisionsData {
+    currentRevision = 0
+    buffer: DiffWithRev[] = []
+    addDiff(diff: Diff) {
+        this.currentRevision += 1
+        const newDiff: DiffWithRev = Object.assign({}, diff, {rev: this.currentRevision})
+        this.buffer.push(newDiff)
+        return newDiff
+    }
+    correctInspection(inspection: Inspection) {
+        this.cleanOldRevisions(inspection.rev)
+        let newInspection = inspection
+        
+        for (const i of this.buffer) {
+            newInspection = offsetInspections(i, [newInspection])[0]
+        }
+        return newInspection
+    }
+    cleanOldRevisions(rev: number){
+        const toRemoveInd = this.buffer.findIndex(i => i.rev > rev)
+        if (toRemoveInd === -1) {
+            this.buffer = []
+            return
+        }
+        this.buffer = this.buffer.slice(toRemoveInd)
+    }
+    okResponse({rev}: {rev: number}) {
+        this.cleanOldRevisions(rev)
+    }
+    
+}
 
 export class StateModel {
     state: Atom<State>
+
+    revisionsData = new RevisionsData()
+
     constructor({ text }: { text: string }) {
         this.state = Atom.create(new State({ text }))
     }
     addInspection(inspection: Inspection) {
         this.state.lens('inspections').modify(inspections => {  //todo
+            inspection = this.revisionsData.correctInspection(inspection)
             // let ind = 0
             // for (const ins of inspections) {
             //     if (inspection.start > ins.start) {
@@ -83,21 +124,28 @@ export class StateModel {
             return inspections.filter(ins => ins.id !== id) //todo
         })
     }
-    cleanInspections() {
+    reset() {
+        this.revisionsData = new RevisionsData()
         this.state.lens('inspections').set([])
     }
+    
     setText(newText: string, ctx: { event: InputKeyboardEvent, position: number }) {
-        const diff = getDiff(this.state.lens('text').get(), newText, ctx)
+        let diff = getDiff(this.state.lens('text').get(), newText, ctx)
+        if (diff === null) {
+            return {diff}
+        }
+
         this.state.modify(state => {
             const { text, inspections } = state;
-            let newInspections = state.inspections
+            let newInspections = offsetInspections(diff!, state.inspections)
             // validateDiff(text, newText, diff)
-            if (diff !== null) {
-                newInspections = offsetInspections(diff, inspections)
-            }
+
+                
             return Object.assign({}, state, {text: newText, inspections: newInspections})            
         })
-        return { diff }
+
+        return { diff: this.revisionsData.addDiff(diff) }
+        
     }
     setCurPos(newPos: number) {
         this.state.lens('cursorPosition').set(newPos)
