@@ -29,6 +29,7 @@ export class TextNode {
 
 export class State {
     inspections: Inspection[] = []
+    // nodes: TextNode[] = []
     text: string
     cursorPosition: number
     constructor({ text }: { text: string }) {
@@ -86,7 +87,7 @@ export class StateModel {
         const text = this.state.lens('text').get()
 
         const diff = getDiff(text, newText)
-        validateDiff(text, newText, diff)
+        // validateDiff(text, newText, diff)
         if (diff !== null) {
             this.state.lens('inspections').modify(inspections => {
                 return offsetInspections(diff, inspections)

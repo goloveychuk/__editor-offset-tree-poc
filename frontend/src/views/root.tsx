@@ -14,7 +14,7 @@ export class RootView extends React.Component {
     render() {
         return <div >
 
-            <textarea ref={(ref) => {this.textAreaRef=ref}} cols={100} rows={20}></textarea>
+            <textarea placeholder="type text" ref={(ref) => {this.textAreaRef=ref}}></textarea>
 
         </div>
     }

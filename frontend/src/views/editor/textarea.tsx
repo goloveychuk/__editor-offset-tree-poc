@@ -21,10 +21,7 @@ export class TextAreaWrapper {
         this.api.connect()
         const overlay = new Textoverlay(node, { onInput: this.onInput, onCursorPosChange: this.onCurPosChange})
 
-        // node.value = 'inasias asl;dk askld djsa ldsf dlskf adsl;fajs dfl;k '        
         this.viewModel = new StateModel({text: node.value})
-        // this.viewModel.addInspection(new Inspection(4, 10))
-
         
         ReactDOM.render(
             <TextareaView state={this.viewModel} />,

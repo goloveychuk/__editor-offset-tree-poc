@@ -40,4 +40,11 @@ body {
 textarea {
   line-height: 1.6em;
   font-size: 1.5em;
+  height: 10000px;
+  width: 1000px !important;
+  overflow: hidden;
+  background-color: transparent;
+  border: none;
+  resize: none;
+  // height: 100%;
 }

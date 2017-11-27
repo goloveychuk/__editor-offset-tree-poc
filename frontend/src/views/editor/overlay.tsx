@@ -43,11 +43,11 @@ const css = {
         // "z-index": 1000
     },
     textarea: {
-        background: "transparent",
         "box-sizing": "border-box",
         outline: "none",
         position: "relative",
-        height: "100%",
+        // overflow: 'hidden',
+        // height: "100%",
         width: "100%",
         margin: "0px",
     },
@@ -207,10 +207,10 @@ export class Textoverlay {
     // }
 
     handleScroll = () => {
-        this.sync()
+        // this.sync()
     }
 
     handleResize = () => {
-        this.sync()
+        // this.sync()
     }
 }
