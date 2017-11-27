@@ -1,9 +1,9 @@
-import { Api, Request, Response } from './api'
+import { Api, Request, Response } from '../../api'
 import { Textoverlay } from './overlay';
 import * as ReactDOM from 'react-dom'
 import * as React from 'react';
 import { Atom } from '@grammarly/focal';
-import { StateModel, Inspection } from './models';
+import { StateModel, Inspection } from '../../models';
 import { TextareaView } from './view';
 
 interface MyEvent extends Event {

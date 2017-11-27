@@ -1,6 +1,6 @@
 import * as React from 'react';
 import { Atom, reactiveList, ReadOnlyAtom, lift, F, Lens } from '@grammarly/focal';
-import { State, TextNode, StateModel } from './models';
+import { State, TextNode, StateModel } from '../../models';
 import * as ClassNames from 'classnames';
 
 

@@ -1,30 +1,29 @@
 import registerServiceWorker from './registerServiceWorker';
 import * as React from 'react';
 import * as ReactDOM from 'react-dom';
-import { TextAreaWrapper } from './textarea'
+import { RootView } from './views/root'
 import './index.css';
 
 
 
 
 
-ReactDOM.render(<div>
-  <textarea cols={100} rows={20}></textarea>
-</div>,
+ReactDOM.render(
+  <RootView />,
   document.getElementById('root') as HTMLElement
 );
 
 
 
-function registerTextArea(t: HTMLTextAreaElement) {
-  textareas.push(new TextAreaWrapper(t))
-}
+// function registerTextArea(t: HTMLTextAreaElement) {
+//   textareas.push(new TextAreaWrapper(t))
+// }
 
-let textareas: TextAreaWrapper[] = []
-
-
-
-registerTextArea(document.getElementsByTagName('textarea').item(0))
+// let textareas: TextAreaWrapper[] = []
 
 
-registerServiceWorker();
+
+// registerTextArea(document.getElementsByTagName('textarea').item(0))
+
+
+// registerServiceWorker();

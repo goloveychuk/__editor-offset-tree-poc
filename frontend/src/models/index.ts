@@ -1,6 +1,6 @@
 import { Atom } from '@grammarly/focal'
-import { Tree } from './lib/tree'
-import { getDiff, validateDiff, Diff } from './utils'
+
+import { getDiff, validateDiff, Diff } from '../utils'
 
 
 export enum InspectionType {
