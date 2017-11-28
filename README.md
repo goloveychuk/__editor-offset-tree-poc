@@ -77,6 +77,8 @@ https://gitlab.com/goloveychuk/editor/blob/master/frontend/src/views/editor/view
 
 ## Offset tree
 
+https://gitlab.com/goloveychuk/editor/blob/master/frontend/src/lib/tree.ts
+
 disclaimer: думаю, все це несе виключно академічну цінність, і якийсь профіт буде з 10000 нод (на практиці ніколи). Думаю webkit з деревами працює набагато довше ніж з массивами.
 Плюс webkit після якоїсь кількості ітерацій оптимізовує цикли в плюсовий код, з дереваами в нього наврядчи вийде.
 
