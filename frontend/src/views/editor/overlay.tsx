@@ -72,7 +72,7 @@ const properties = {
 
 
 interface CallbacksType {
-    onInput(e: KeyboardEvent): void
+    onInput(e: KeyboardEvent, cursorPos: number): void
     onCursorPosChange(pos: number): void
 }
 
@@ -175,30 +175,45 @@ export class Textoverlay {
 
     onInput = (ev: KeyboardEvent) => {
         this.sync() ///todo
-        this.callbacks.onInput(ev)
+
+        this.checkCursorPos()
+        this.callbacks.onInput(ev, this.cursorPos)
     }
 
     checkCursorPos = () => {
         const { selectionStart, selectionEnd } = this.textarea;
         if (selectionStart !== selectionEnd) {
-            return
+            return false
         }
         if (selectionStart !== this.cursorPos) {
             this.cursorPos = selectionStart
-            this.callbacks.onCursorPosChange(this.cursorPos)
+            return true
+        }
+        return false
+    }
+    runCursorCbIfNeeded(){
+        if (this.checkCursorPos()){
+             this.callbacks.onCursorPosChange(this.cursorPos)
         }
     }
 
     onClick = (ev: MouseEvent) => {
-        this.checkCursorPos()
+        this.runCursorCbIfNeeded()
     }
 
     onKeyup = (ev: KeyboardEvent) => {
-        this.checkCursorPos()
+        switch (ev.key) {
+            case 'ArrowLeft':
+            case 'ArrowRight':
+            case 'ArrowUp':
+            case 'ArrowDown':
+                this.runCursorCbIfNeeded()
+                break
+        }
     }
 
     onFocus = (ev: KeyboardEvent) => {
-        this.checkCursorPos()
+        this.runCursorCbIfNeeded()        
     }
 
     // handleInput = (ev: Event) => {

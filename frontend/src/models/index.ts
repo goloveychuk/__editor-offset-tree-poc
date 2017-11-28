@@ -79,7 +79,7 @@ class OrderedMap<K, V> {
         this._list.push(val)
         this._map.set(key, val)
     }
-    push(val: V) { //no key
+    push(val: V) {
         this._list.push(val)
     }
     get(key: K): V | undefined {
@@ -134,7 +134,7 @@ class Inspections {
     offset(diffs: Diff[]) {
         return new Inspections(Inspections._offset(this.inspections, diffs))
     }
-    add(inspection: Inspection, revisionsData: RevisionsData) {
+    add(inspection: Inspection, revisionsData: RevisionsData) {  //todo O(logn)
         const diffs = revisionsData.getDiffs(inspection.rev)
 
         let correctedInspection = Inspections._offset([inspection], diffs)[0]
@@ -144,8 +144,8 @@ class Inspections {
 
         return new Inspections(newInspections)
     }
-    remove(id: number) {
-        return new Inspections(this.inspections.filter(ins => ins.id !== id)) //todo        
+    remove(id: number) { //todo o(1)
+        return new Inspections(this.inspections.filter(ins => ins.id !== id))
     }
     [Symbol.iterator]() {
         return this.inspections[Symbol.iterator]()
@@ -187,7 +187,7 @@ export class StateModel {
         this.state.lens('inspections').set(new Inspections())
     }
 
-    setText(newText: string, ctx: { event: InputKeyboardEvent, position: number }) {
+    setText(newText: string, cursorPosition: number, ctx: { event: InputKeyboardEvent, position: number }) {
         let diff = getDiff(this.state.lens('text').get(), newText, ctx)
         if (diff === null) {
             return { diff }
@@ -198,7 +198,7 @@ export class StateModel {
             let newInspections = inspections.offset([diff!])
             // validateDiff(text, newText, diff)
 
-            return Object.assign({}, state, { text: newText, inspections: newInspections })
+            return Object.assign({}, state, { cursorPosition, text: newText, inspections: newInspections })
         })
 
         return { diff: this.revisionsData.addDiff(diff) }
@@ -208,7 +208,7 @@ export class StateModel {
         this.state.lens('cursorPosition').set(newPos)
     }
 
-    getNodes(): ReadOnlyAtom<NodesForView> {
+    getNodes(): ReadOnlyAtom<NodesForView> { //todo
         return this.state.view(st => ({
             inspections: st.inspections,
             text: st.text,
@@ -235,7 +235,6 @@ export class StateModel {
             if (lastInsInd !== text.length) {
                 res.push(text.substring(lastInsInd))
             }
-            // console.log(res)
             return res
         })
     }

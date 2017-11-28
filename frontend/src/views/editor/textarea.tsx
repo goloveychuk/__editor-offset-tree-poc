@@ -63,10 +63,10 @@ export class TextAreaWrapper {
         this.api.send(req)
     }
 
-    onInput = (event: InputKeyboardEvent) => {
+    onInput = (event: InputKeyboardEvent, cursorPos: number) => {
         const newText = event.target.value;
         const position = event.target.selectionStart;
-        const { diff } = this.viewModel.setText(newText, { event, position })
+        const { diff } = this.viewModel.setText(newText, cursorPos, { event, position })
         if (diff === null) {
             return
         }
