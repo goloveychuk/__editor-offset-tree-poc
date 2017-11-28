@@ -47,7 +47,7 @@ class Server:
 
     def start_server(self):
 
-        server = websockets.serve(self.onConnect, 'localhost', 8765)
+        server = websockets.serve(self.onConnect, '0.0.0.0', 8002)
 
         asyncio.get_event_loop().run_until_complete(server)
         print('server started')
