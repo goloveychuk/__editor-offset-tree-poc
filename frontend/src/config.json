@@ -1,5 +1,5 @@
 {
     "api": {
-        "endpoint": "ws://backend:8002"
+        "endpoint": "ws://128.199.48.32:8002"
     }
 }

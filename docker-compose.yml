@@ -14,5 +14,3 @@ services:
       dockerfile: frontend.dockerfile
     ports:
       - 8000:8000
-    links:
-      - backend
