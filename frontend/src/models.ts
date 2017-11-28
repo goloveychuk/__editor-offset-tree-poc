@@ -51,18 +51,18 @@ export class StateModel {
     setText(start: number, end: number, text: string) {
         this.updateTree(tree => {
             const p = tree.find(start)
-            if (p === undefined) {
+            // if (p === undefined) {
                 const textNode = new TextNode(text)
                 tree.insert(start, end, textNode)
                 return
-            }
-            const newText = replaceRange(p.data!.text, start, end, text)
-            if (newText.length === 0) {
-                p.data!.text = newText //todo                
-                p.remove()
-            } else {
-                p.data!.text = newText
-            }
+            // }
+            // const newText = replaceRange(p.data!.text, start, end, text)
+            // if (newText.length === 0) {
+            //     p.data!.text = newText //todo                
+            //     p.remove()
+            // } else {
+            //     p.data!.text = newText
+            // }
         })
     }
     addInspection(start: number, end: number, inspection: Inspection) {
