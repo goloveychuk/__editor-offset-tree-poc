@@ -1,6 +1,7 @@
 import { Atom } from '@grammarly/focal'
 
 import { getDiff, validateDiff, Diff, InputKeyboardEvent } from '../utils'
+import { ReadOnlyAtom } from '@grammarly/focal/dist/src/atom/base';
 
 
 export enum InspectionType {
@@ -15,17 +16,11 @@ export interface Inspection {
     rev: number
 }
 
-export class TextNode {
+export interface TextNode {
     id: number
     text: string
-
-    inspection?: Inspection
-    constructor(text: string, inspection?: Inspection, readonly highlighted?: boolean) {
-        this.text = text;
-        this.id = Math.random() * 100
-        this.inspection = inspection
-    }
-}
+    highlighted?: boolean
+} 
 
 
 export class State {
@@ -95,6 +90,11 @@ class RevisionsData {
     
 }
 
+export interface NodesForView {
+    nodes: (TextNode|string)[]
+    nodesIndex: {[key: number]: TextNode}
+}
+
 export class StateModel {
     state: Atom<State>
 
@@ -151,27 +151,37 @@ export class StateModel {
         this.state.lens('cursorPosition').set(newPos)
     }
 
-    getNodes() { //todo perf, only text, ids
+    getNodes(): ReadOnlyAtom<NodesForView> { 
         return this.state.view(st => ({
             inspections: st.inspections,
             text: st.text,
             cursorPosition: st.cursorPosition,
         })).view(({ inspections, text, cursorPosition }) => {
-            let res: TextNode[] = []
+            let res: (TextNode|string)[] = []
+            let nodesIndex: {[key: number]: TextNode} = {}
             let lastInsInd = 0
             for (const ins of inspections) {
                 if (ins.start !== lastInsInd) {
-                    res.push(new TextNode(text.substring(lastInsInd, ins.start)))
+                    res.push(text.substring(lastInsInd, ins.start))
                 }
                 const highlighted = cursorPosition >= ins.start && cursorPosition <= ins.end
-                res.push(new TextNode(text.substring(ins.start, ins.end), ins, highlighted))
+
+                const node = {
+                    text: text.substring(ins.start, ins.end), 
+                    id: ins.id,
+                    highlighted
+                }
+
+                nodesIndex[node.id] = node
+
+                res.push(node)
                 lastInsInd = ins.end;
             }
             if (lastInsInd !== text.length) {
-                res.push(new TextNode(text.substring(lastInsInd)))
+                res.push(text.substring(lastInsInd))
             }
             console.log(res)
-            return res
+            return {nodes: res, nodesIndex}
         })
     }
 }
