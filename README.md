@@ -28,7 +28,8 @@
 2) https://gitlab.com/goloveychuk/editor/blob/master/frontend/src/models/index.ts#L211-240
 зараз O(n) для любої зміни в text, cursor position, inspections
     
-- легко оптимізувати: не перераховувати при зміні cursor positions (зберігати текст ноди як атоми, робити точечну зміну)
+- можна уникнути перерахункупри зміні cursor positions (зберігати текст ноди як атоми, робити точечну зміну)
+- можна спробувати, знаючи які inspections додались або видались, змінювати сусідні ноди.
     
 
 
