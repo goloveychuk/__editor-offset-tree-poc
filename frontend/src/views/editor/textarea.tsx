@@ -27,7 +27,7 @@ export class TextAreaWrapper {
             <TextareaView state={this.viewModel} />,
             overlay.getContainer()
         )
-        this.processApiMessages = Lodash.debounce(this._processApiMessages, 500)
+        this.processApiMessages = Lodash.throttle(this._processApiMessages, 500)
 
     }
     _processApiMessages = () => {
@@ -45,6 +45,7 @@ export class TextAreaWrapper {
                         break;
                 }
             }
+            this.apiQueue = []
             return proxy
         })
     }

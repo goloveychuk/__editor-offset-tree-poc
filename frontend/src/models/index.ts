@@ -107,8 +107,7 @@ class Inspections {
             this.inspections = []
         }
     }
-    private _offset(inspections: Inspection[], diffs: Diff[]) {
-
+    private static _offset(inspections: Inspection[], diffs: Diff[]) {
         const res = inspections.map(ins => {
             let newStart = ins.start
             let newEnd = ins.end
@@ -133,14 +132,14 @@ class Inspections {
         return res
     }
     offset(diffs: Diff[]) {
-        return new Inspections(this._offset(this.inspections, diffs))
+        return new Inspections(Inspections._offset(this.inspections, diffs))
     }
     add(inspection: Inspection, revisionsData: RevisionsData) {
         const diffs = revisionsData.getDiffs(inspection.rev)
 
-        let newInspections = this._offset([inspection], diffs)
+        let correctedInspection = Inspections._offset([inspection], diffs)[0]
         
-        newInspections = [inspection].concat(this.inspections)
+        const newInspections = [correctedInspection].concat(this.inspections)
         newInspections.sort((a, b) => a.start - b.start)
 
         return new Inspections(newInspections)
