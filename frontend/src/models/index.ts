@@ -17,7 +17,7 @@ export interface Inspection {
 }
 
 export interface TextNode {
-    id: number
+    id: string
     text: string
     highlighted?: boolean
 } 
@@ -90,9 +90,35 @@ class RevisionsData {
     
 }
 
-export interface NodesForView {
-    nodes: (TextNode|string)[]
-    nodesIndex: {[key: number]: TextNode}
+export type NodesForView = OrderedMap<string, TextNode | string>
+
+class OrderedMap<K, V> {
+    private _list: V[]
+    private _map: Map<K,V>
+    constructor() {
+        this._list = [] 
+        this._map = new Map<K, V>()
+    }
+    add(key: K, val: V) {
+        this._list.push(val)
+        this._map.set(key, val)
+    }
+    push(val: V) { //no key
+        this._list.push(val)
+    }
+    get(key: K): V | undefined {
+        return this._map.get(key)
+    }
+    [Symbol.iterator]() {
+        return this._list[Symbol.iterator]()
+    }
+    get length() {
+        return this._list.length
+    }
+    map<T>(cb: (v: V, ind: number)=>T) {
+        return this._list.map(cb)
+    }
+
 }
 
 export class StateModel {
@@ -157,7 +183,7 @@ export class StateModel {
             text: st.text,
             cursorPosition: st.cursorPosition,
         })).view(({ inspections, text, cursorPosition }) => {
-            let res: (TextNode|string)[] = []
+            let res = new OrderedMap<string, TextNode | string>()
             let nodesIndex: {[key: number]: TextNode} = {}
             let lastInsInd = 0
             for (const ins of inspections) {
@@ -168,20 +194,18 @@ export class StateModel {
 
                 const node = {
                     text: text.substring(ins.start, ins.end), 
-                    id: ins.id,
+                    id: ins.id.toString(),
                     highlighted
                 }
 
-                nodesIndex[node.id] = node
-
-                res.push(node)
+                res.add(node.id, node)
                 lastInsInd = ins.end;
             }
             if (lastInsInd !== text.length) {
                 res.push(text.substring(lastInsInd))
             }
-            console.log(res)
-            return {nodes: res, nodesIndex}
+            // console.log(res)
+            return res
         })
     }
 }

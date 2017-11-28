@@ -32,18 +32,18 @@ interface Props {
 
 export function reactiveList(nodesObs: ReadOnlyAtom<NodesForView>): Observable<React.ReactNode[]> {
     return nodesObs.scan(
-        ([oldCache, _], nodesContainer: NodesForView) => {
+        ([oldCache, _], nodes: NodesForView) => {
 
             const newCache: any = {}
-            const newValues: React.ReactNode[] = nodesContainer.nodes.map((n, ind) => {
+            const newValues: React.ReactNode[] = nodes.map((n, ind) => {
                 if (typeof n === 'string') {
-                    return null
+                    return n
                 }
                 let comp;
-                if (n.id in oldCache) {              
+                if (n.id in oldCache) {
                     comp = oldCache[n.id]
                 } else {
-                    const node = nodesObs.view(nod => nod.nodesIndex[n.id])                
+                    const node = nodesObs.view(nod => nod.get(n.id))
                     comp = <NodeView key={n.id} node={node as ReadOnlyAtom<TextNode>} />
                 }
                 newCache[n.id] = comp
