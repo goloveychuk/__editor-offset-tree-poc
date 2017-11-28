@@ -15,7 +15,7 @@
   3) отримали правку з бекенду <- зміщуєм
 
 
-## Performance (вузькі місця)
+## Вузькі місця
 
 1) https://gitlab.com/goloveychuk/editor/blob/master/frontend/src/models/index.ts#L110-149
 
