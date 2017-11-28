@@ -2,6 +2,8 @@ import { Atom } from '@grammarly/focal'
 
 import { getDiff, validateDiff, Diff, InputKeyboardEvent } from '../utils'
 import { ReadOnlyAtom } from '@grammarly/focal/dist/src/atom/base';
+import { inspect } from 'util';
+import { retry } from 'rxjs/operators/retry';
 
 
 export enum InspectionType {
@@ -20,13 +22,13 @@ export interface TextNode {
     id: string
     text: string
     highlighted?: boolean
-} 
+}
 
 
 export class State {
-    inspections: Inspection[] = []
+    inspections = new Inspections()
 
-    
+
     text: string
     cursorPosition: number
     constructor({ text }: { text: string }) {
@@ -36,25 +38,6 @@ export class State {
 }
 
 
-function offsetInspections(diff: Diff, inspections: Inspection[]): Inspection[] {
-    const offset = diff.text.length - (diff.end - diff.start);
-
-    const res = inspections.map(ins => {
-        let newStart = ins.start
-        let newEnd = ins.end
-        if (diff.start <= ins.start && diff.end <= ins.end) {
-            newStart += offset
-            newEnd += offset
-        } else if (diff.start > ins.start && diff.end < ins.end) {
-            newEnd += offset
-        } else {
-            return ins
-        }
-        return Object.assign({}, ins, { start: newStart, end: newEnd })
-
-    })
-    return res
-}
 interface DiffWithRev extends Diff {
     rev: number
 }
@@ -63,20 +46,16 @@ class RevisionsData {
     buffer: DiffWithRev[] = []
     addDiff(diff: Diff) {
         this.currentRevision += 1
-        const newDiff: DiffWithRev = Object.assign({}, diff, {rev: this.currentRevision})
+        const newDiff: DiffWithRev = Object.assign({}, diff, { rev: this.currentRevision })
         this.buffer.push(newDiff)
         return newDiff
     }
-    correctInspection(inspection: Inspection) {
-        this.cleanOldRevisions(inspection.rev)
-        let newInspection = inspection
-        
-        for (const i of this.buffer) {
-            newInspection = offsetInspections(i, [newInspection])[0]
-        }
-        return newInspection
+    getDiffs(rev: number) {
+        this.removeDiffs(rev)
+        return this.buffer;
     }
-    cleanOldRevisions(rev: number){
+   
+    removeDiffs(rev: number) {
         const toRemoveInd = this.buffer.findIndex(i => i.rev > rev)
         if (toRemoveInd === -1) {
             this.buffer = []
@@ -84,19 +63,16 @@ class RevisionsData {
         }
         this.buffer = this.buffer.slice(toRemoveInd)
     }
-    okResponse({rev}: {rev: number}) {
-        this.cleanOldRevisions(rev)
-    }
-    
+
 }
 
 export type NodesForView = OrderedMap<string, TextNode | string>
 
 class OrderedMap<K, V> {
     private _list: V[]
-    private _map: Map<K,V>
+    private _map: Map<K, V>
     constructor() {
-        this._list = [] 
+        this._list = []
         this._map = new Map<K, V>()
     }
     add(key: K, val: V) {
@@ -115,76 +91,132 @@ class OrderedMap<K, V> {
     get length() {
         return this._list.length
     }
-    map<T>(cb: (v: V, ind: number)=>T) {
+    map<T>(cb: (v: V, ind: number) => T) {
         return this._list.map(cb)
     }
 
 }
 
+
+class Inspections {
+    private inspections: Inspection[]
+    constructor(initialInspections?: Inspection[]) {
+        if (initialInspections !== undefined) {
+            this.inspections = initialInspections
+        } else {
+            this.inspections = []
+        }
+    }
+    private _offset(inspections: Inspection[], diffs: Diff[]) {
+
+        const res = inspections.map(ins => {
+            let newStart = ins.start
+            let newEnd = ins.end
+
+            for (const diff of diffs) {
+                const offset = diff.text.length - (diff.end - diff.start);
+
+                if (diff.start <= ins.start && diff.end <= ins.end) {
+                    newStart += offset
+                    newEnd += offset
+                } else if (diff.start > ins.start && diff.end < ins.end) {
+                    newEnd += offset
+                } else {
+                    continue
+                }
+            }
+            if (newStart === ins.start && newEnd === ins.end) {
+                return ins
+            }
+            return Object.assign({}, ins, { start: newStart, end: newEnd })
+        })
+        return res
+    }
+    offset(diffs: Diff[]) {
+        return new Inspections(this._offset(this.inspections, diffs))
+    }
+    add(inspection: Inspection, revisionsData: RevisionsData) {
+        const diffs = revisionsData.getDiffs(inspection.rev)
+
+        let newInspections = this._offset([inspection], diffs)
+        
+        newInspections = [inspection].concat(this.inspections)
+        newInspections.sort((a, b) => a.start - b.start)
+
+        return new Inspections(newInspections)
+    }
+    remove(id: number) {
+        return new Inspections(this.inspections.filter(ins => ins.id !== id)) //todo        
+    }
+    [Symbol.iterator]() {
+        return this.inspections[Symbol.iterator]()
+    }
+
+}
+
+class InspectionProxy {
+    constructor(public inspections: Inspections, private revisionsData: RevisionsData) {
+
+    }
+    add(inspection: Inspection) {
+        this.inspections = this.inspections.add(inspection, this.revisionsData)
+        return this
+    }
+    remove(id: number) {
+        this.inspections = this.inspections.remove(id)
+        return this        
+    }
+}
+
 export class StateModel {
     state: Atom<State>
-
     revisionsData = new RevisionsData()
+
 
     constructor({ text }: { text: string }) {
         this.state = Atom.create(new State({ text }))
     }
-    addInspection(inspection: Inspection) {
-        this.state.lens('inspections').modify(inspections => {  //todo
-            inspection = this.revisionsData.correctInspection(inspection)
-            // let ind = 0
-            // for (const ins of inspections) {
-            //     if (inspection.start > ins.start) {
-            //         break
-            //     }
-            //     ind += 1
-            // }
-            // return inspections.slice(0, ind).concat([inspection]).concat(inspections.slice(ind))
-            const newInspections = [inspection].concat(inspections)
-            newInspections.sort((a, b) => a.start - b.start)
-            return newInspections
-        })
-    }
-    removeInspection(id: number) {
+
+    modifyInspections(cb: (ins: InspectionProxy) => InspectionProxy) {
         this.state.lens('inspections').modify(inspections => {
-            return inspections.filter(ins => ins.id !== id) //todo
+            const res = cb(new InspectionProxy(inspections, this.revisionsData))
+            return res.inspections
         })
     }
     reset() {
         this.revisionsData = new RevisionsData()
-        this.state.lens('inspections').set([])
+        this.state.lens('inspections').set(new Inspections())
     }
-    
+
     setText(newText: string, ctx: { event: InputKeyboardEvent, position: number }) {
         let diff = getDiff(this.state.lens('text').get(), newText, ctx)
         if (diff === null) {
-            return {diff}
+            return { diff }
         }
 
         this.state.modify(state => {
             const { text, inspections } = state;
-            let newInspections = offsetInspections(diff!, state.inspections)
+            let newInspections = inspections.offset([diff!])
             // validateDiff(text, newText, diff)
 
-                
-            return Object.assign({}, state, {text: newText, inspections: newInspections})            
+            return Object.assign({}, state, { text: newText, inspections: newInspections })
         })
 
         return { diff: this.revisionsData.addDiff(diff) }
-        
+
     }
     setCurPos(newPos: number) {
         this.state.lens('cursorPosition').set(newPos)
     }
 
-    getNodes(): ReadOnlyAtom<NodesForView> { 
+    getNodes(): ReadOnlyAtom<NodesForView> {
         return this.state.view(st => ({
             inspections: st.inspections,
             text: st.text,
             cursorPosition: st.cursorPosition,
         })).view(({ inspections, text, cursorPosition }) => {
             let res = new OrderedMap<string, TextNode | string>()
-            let nodesIndex: {[key: number]: TextNode} = {}
+            let nodesIndex: { [key: number]: TextNode } = {}
             let lastInsInd = 0
             for (const ins of inspections) {
                 if (ins.start !== lastInsInd) {
@@ -193,7 +225,7 @@ export class StateModel {
                 const highlighted = cursorPosition >= ins.start && cursorPosition <= ins.end
 
                 const node = {
-                    text: text.substring(ins.start, ins.end), 
+                    text: text.substring(ins.start, ins.end),
                     id: ins.id.toString(),
                     highlighted
                 }

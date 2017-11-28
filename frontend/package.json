@@ -6,6 +6,7 @@
     "@grammarly/focal": "^0.6.434",
     "@types/classnames": "^2.2.3",
     "classnames": "^2.2.5",
+    "lodash": "^4.17.4",
     "react": "^16.1.0",
     "react-dom": "^16.1.0",
     "react-scripts-ts": "2.8.0",
@@ -18,14 +19,15 @@
     "eject": "react-scripts-ts eject"
   },
   "devDependencies": {
-    "typescript": "2.6.1",
     "@types/d3": "^4.11.1",
     "@types/jest": "^21.1.6",
+    "@types/lodash": "^4.14.85",
     "@types/node": "^8.0.51",
     "@types/react": "^16.0.22",
     "@types/react-dom": "^16.0.3",
     "d3": "^4.11.0",
     "shallowequal": "^1.0.2",
-    "ts-node": "^3.3.0"
+    "ts-node": "^3.3.0",
+    "typescript": "2.6.1"
   }
 }

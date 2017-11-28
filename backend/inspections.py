@@ -32,8 +32,8 @@ class Node(object):
     def has(self, word):
         if len(word) == 0:
             return False
-
-        p = self;
+        word = word.lower()
+        p = self
         for c in word:
             if p.children is None:
                 return False
