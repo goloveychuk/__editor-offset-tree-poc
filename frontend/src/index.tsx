@@ -2,7 +2,6 @@ import registerServiceWorker from './registerServiceWorker';
 import * as React from 'react';
 import * as ReactDOM from 'react-dom';
 import { RootView } from './views/root'
-import { TestView } from './views/testview'
 import './index.css';
 
 
