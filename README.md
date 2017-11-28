@@ -20,7 +20,7 @@
 1) https://gitlab.com/goloveychuk/editor/blob/master/frontend/src/models/index.ts#L110-149
 
 
-- add() і remove() можна легко написати O(log(n)) i O(1) (linked list)
+- add() і remove() можна написати O(log(n)) i O(1) (дерево)
 - offset() - зараз O(n) для одного diff (обично він один). В теорії можна зробити Log n (див. нижче Offset Tree)
 
 
