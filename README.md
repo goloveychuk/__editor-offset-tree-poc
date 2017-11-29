@@ -50,6 +50,8 @@ https://gitlab.com/goloveychuk/editor/blob/master/frontend/src/views/editor/view
 - не юзати React (див далі. Асинхронний рендерінг)
 - форкнути react-dom і додати оптимізацію.
 
+**upd: зробив span**
+
 
 В цілому лагів не помічаю. Я додав debouncer на бекенд, щоб не просідало коли приходять підряд багато відповідей які міняють стейт.
 
@@ -73,6 +75,7 @@ https://gitlab.com/goloveychuk/editor/blob/master/frontend/src/views/editor/view
 
 відрендирили частину, перервались, глянули чи юзер шось хоче, обробили, вернулись, змерджили чергу змін (якщо є перекриваючі зміни), продовжили.
 
+**upd: потестив на core2duo, 2gb - підлагує, буду оптимізовувати**
 
 
 ## Offset tree
