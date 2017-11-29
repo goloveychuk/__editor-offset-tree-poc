@@ -6,7 +6,7 @@ export interface Diff {
     start: number
     end: number
     text: string
-} 
+}
 
 interface Ctx {
     event: InputKeyboardEvent
@@ -16,12 +16,23 @@ interface Ctx {
 export interface InputKeyboardEvent extends KeyboardEvent {
     target: HTMLTextAreaElement
     data: string | null
-    inputType: 'deleteContentBackward' | 'deleteContentForward' | 'insertText' 
+    inputType: 'deleteContentBackward' | 'deleteContentForward' | 'insertText'
 }
 
-function getFastDiff(base: string, neww: string, lenDiff: number, {event, position}: Ctx): Diff | false {
+function getFastDiff(base: string, neww: string, lenDiff: number, { event, position }: Ctx): Diff | false {
 
     switch (event.inputType) {
+        case 'deleteContentBackward':
+        case 'deleteContentForward':
+            if (lenDiff !== -1) {
+                return false
+            }
+            return {
+                start: position,
+                end: position+1,
+                text: '',
+            }
+        
         case 'insertText':
             if (lenDiff !== 1) {
                 return false
@@ -34,6 +45,7 @@ function getFastDiff(base: string, neww: string, lenDiff: number, {event, positi
                 end: position - 1,
                 text: event.data!,
             }
+
     }
     return false
 }
@@ -77,7 +89,7 @@ export function getDiff(base: string, neww: string, ctx: Ctx): Diff | null {
                 if (base[baseInd] === neww[newInd]) {
                     buf += neww[newInd]
                 } else {
-                    if (buf.length>0) {
+                    if (buf.length > 0) {
                         text += buf
                         end += buf.length
                         buf = ''
@@ -112,10 +124,10 @@ export function replaceRange(s: string, start: number, end: number, substitute: 
 
 export function validateDiff(base: string, neww: string, diff: Diff | null) {
     console.log(`base="${base}", new="${neww}", ${JSON.stringify(diff)}`)
-    
+
     if (diff === null) {
         if (neww !== base) {
-            throw new Error(`"${neww}", "${base}" should be the same`)            
+            throw new Error(`"${neww}", "${base}" should be the same`)
         }
         return
     }
