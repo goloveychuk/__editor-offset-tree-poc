@@ -4,7 +4,7 @@ import { getDiff, validateDiff, Diff, InputKeyboardEvent } from '../utils'
 import { ReadOnlyAtom } from '@grammarly/focal/dist/src/atom/base';
 import { inspect } from 'util';
 import { retry } from 'rxjs/operators/retry';
-
+import {OrderedMap} from '../structs'
 
 export enum InspectionType {
     UnknownWord = 'unknown_word'
@@ -69,34 +69,6 @@ class RevisionsData {
 
 export type NodesForView = OrderedMap<string, TextNode>
 
-class OrderedMap<K, V> {
-    private _list: V[]
-    private _map: Map<K, V>
-    constructor() {
-        this._list = []
-        this._map = new Map<K, V>()
-    }
-    add(key: K, val: V) {
-        this._list.push(val)
-        this._map.set(key, val)
-    }
-    push(val: V) {
-        this._list.push(val)
-    }
-    get(key: K): V | undefined {
-        return this._map.get(key)
-    }
-    [Symbol.iterator]() {
-        return this._list[Symbol.iterator]()
-    }
-    get length() {
-        return this._list.length
-    }
-    map<T>(cb: (v: V, ind: number) => T) {
-        return this._list.map(cb)
-    }
-
-}
 
 
 class Inspections {
