@@ -22,6 +22,7 @@ export interface TextNode {
     id: string
     text: string
     highlighted?: boolean
+    isInspection?: boolean
 }
 
 
@@ -66,7 +67,7 @@ class RevisionsData {
 
 }
 
-export type NodesForView = OrderedMap<string, TextNode | string>
+export type NodesForView = OrderedMap<string, TextNode>
 
 class OrderedMap<K, V> {
     private _list: V[]
@@ -214,18 +215,22 @@ export class StateModel {
             text: st.text,
             cursorPosition: st.cursorPosition,
         })).view(({ inspections, text, cursorPosition }) => {
-            let res = new OrderedMap<string, TextNode | string>()
+            let res = new OrderedMap<string, TextNode>()
             let nodesIndex: { [key: number]: TextNode } = {}
             let lastInsInd = 0
             for (const ins of inspections) {
                 if (ins.start !== lastInsInd) {
-                    res.push(text.substring(lastInsInd, ins.start))
+                    res.add(`${ins.id}before`, {
+                        id: `${ins.id}before`,
+                        text: text.substring(lastInsInd, ins.start)
+                    })
                 }
                 const highlighted = cursorPosition >= ins.start && cursorPosition <= ins.end
 
                 const node = {
                     text: text.substring(ins.start, ins.end),
                     id: ins.id.toString(),
+                    isInspection: true,
                     highlighted
                 }
 
@@ -233,7 +238,10 @@ export class StateModel {
                 lastInsInd = ins.end;
             }
             if (lastInsInd !== text.length) {
-                res.push(text.substring(lastInsInd))
+                res.add(`last`, {
+                    id: 'last',
+                    text: text.substring(lastInsInd)
+                })
             }
             return res
         })

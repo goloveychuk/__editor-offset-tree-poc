@@ -13,7 +13,8 @@ const NodeView = ({ node }: { node: ReadOnlyAtom<TextNode> }) => {
         if (n === undefined) {  //todo maybe modify renderList to unmount components
             return ''
         }
-        return ClassNames('inspection', {
+        return ClassNames({
+            'inspection': n.isInspection,
             'selected': n.highlighted
         })
     })
@@ -36,9 +37,6 @@ export function reactiveList(nodesObs: ReadOnlyAtom<NodesForView>): Observable<R
 
             const newCache: any = {}
             const newValues: React.ReactNode[] = nodes.map((n, ind) => {
-                if (typeof n === 'string') {
-                    return n
-                }
                 let comp;
                 if (n.id in oldCache) {
                     comp = oldCache[n.id]
