@@ -88,10 +88,10 @@ class Inspections {
             for (const diff of diffs) {
                 const offset = diff.text.length - (diff.end - diff.start);
 
-                if (diff.start <= ins.start && diff.end <= ins.end) {
+                if (diff.start <= newStart && diff.end <= newEnd) {
                     newStart += offset
                     newEnd += offset
-                } else if (diff.start > ins.start && diff.end < ins.end) {
+                } else if (diff.start > newStart && diff.end < newEnd) {
                     newEnd += offset
                 } else {
                     continue
