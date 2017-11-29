@@ -5,23 +5,7 @@ import * as ClassNames from 'classnames';
 import { Observable, ObservableInput } from 'rxjs/Observable'
 import { Subscription as RxSubscription } from 'rxjs/Subscription'
 
-
-const NodeView = ({ node }: { node: ReadOnlyAtom<TextNode> }) => {
-
-    console.log('rerenderred node')
-    const clsname = node.view(n => {
-        if (n === undefined) {  //todo maybe modify renderList to unmount components
-            return ''
-        }
-        return ClassNames({
-            'inspection': n.isInspection,
-            'selected': n.highlighted
-        })
-    })
-    return <F.span className={clsname}>
-        {node.view(n => (n !== undefined) && n.text)}
-    </F.span>
-}
+import { Renderer } from './renderer'
 
 
 
@@ -30,42 +14,32 @@ interface Props {
 }
 
 
-
-export function reactiveList(nodesObs: ReadOnlyAtom<NodesForView>): Observable<React.ReactNode[]> {
-    return nodesObs.scan(
-        ([oldCache, _], nodes: NodesForView) => {
-
-            const newCache: any = {}
-            const newValues: React.ReactNode[] = nodes.map((n, ind) => {
-                let comp;
-                if (n.id in oldCache) {
-                    comp = oldCache[n.id]
-                } else {
-                    const node = nodesObs.view(nod => nod.get(n.id))
-                    comp = <NodeView key={n.id} node={node as ReadOnlyAtom<TextNode>} />
-                }
-                newCache[n.id] = comp
-                return comp
-            })
-            
-            return [newCache, newValues]
-        },
-        [{}, []])
-        .map(([_, values]) => values)
-}
-
-
 export class TextareaView extends React.Component<Props> {
-    render() {
+    container: HTMLSpanElement | null
+    _sub: RxSubscription | undefined
+    componentWillUnmount() {
+        if (this._sub !== undefined) {
+            this._sub.unsubscribe()
+        }
+    }
+    componentDidMount() {
+        const container = this.container!;
+
+        const renderer = new Renderer(container)
+
         const nodes = this.props.state.getNodes()
 
-        console.log('rerender root')
-        return <F.span>
-            {
-                reactiveList(nodes)
-            }
-        </F.span>
+        this._sub = nodes.scan((prevNodes: NodesForView, newNodes: NodesForView) => {
+            renderer.compare(prevNodes, newNodes)
+            renderer.commitToDOM()
+            return newNodes
+        }).subscribe(() => {
+
+        })
+    }
+
+    render() {
+        return <span ref={(ref) => { this.container = ref }} />
     }
 }
 
-// {

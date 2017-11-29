@@ -31,7 +31,7 @@ body {
 }
 
 
-.inspection.selected {
+.inspection.highlighted {
   background: #fcaeae;
   transition: background 0.3s ease;
 }
