@@ -80,7 +80,7 @@ export class Renderer {
             switch (u.type) {
                 case Updates.UpdateType.insertNode:
                     const nod1 = document.createElement('span')
-                    nod1.textContent = u.text
+                    nod1.innerText = u.text
                     nod1.setAttribute('class', u.class)
                     elements.set(u.key, nod1)
                     let insertBefore
@@ -102,7 +102,7 @@ export class Renderer {
                     break
                 case Updates.UpdateType.replaceText:
                     const nod3 = elements.get(u.key)!
-                    nod3.textContent = u.text
+                    nod3.innerText = u.text
                     break
                 case Updates.UpdateType.replaceClass:
                     const nod4 = elements.get(u.key)!

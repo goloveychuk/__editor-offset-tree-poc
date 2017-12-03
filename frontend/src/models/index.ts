@@ -5,6 +5,7 @@ import { ReadOnlyAtom } from '@grammarly/focal/dist/src/atom/base';
 import { inspect } from 'util';
 import { retry } from 'rxjs/operators/retry';
 import {OrderedMap} from '../structs'
+import { Observable, ObservableInput } from 'rxjs/Observable'
 
 export enum InspectionType {
     UnknownWord = 'unknown_word'
@@ -81,7 +82,7 @@ class Inspections {
         }
     }
     private static _offset(inspections: Inspection[], diffs: Diff[]) {
-        const res = inspections.map(ins => {
+        for (const ins of inspections) {
             let newStart = ins.start
             let newEnd = ins.end
 
@@ -98,21 +99,23 @@ class Inspections {
                 }
             }
             if (newStart === ins.start && newEnd === ins.end) {
-                return ins
+                continue
             }
-            return Object.assign({}, ins, { start: newStart, end: newEnd })
-        })
-        return res
+            ins.start = newStart
+            ins.end = newEnd
+        }
+
     }
     offset(diffs: Diff[]) {
-        return new Inspections(Inspections._offset(this.inspections, diffs))
+        Inspections._offset(this.inspections, diffs)
+        return this
     }
     add(inspection: Inspection, revisionsData: RevisionsData) {  //todo O(logn)
         const diffs = revisionsData.getDiffs(inspection.rev)
 
-        let correctedInspection = Inspections._offset([inspection], diffs)[0]
+        Inspections._offset([inspection], diffs)
         
-        const newInspections = [correctedInspection].concat(this.inspections)
+        const newInspections = [inspection].concat(this.inspections)
         newInspections.sort((a, b) => a.start - b.start)
 
         return new Inspections(newInspections)
@@ -181,12 +184,8 @@ export class StateModel {
         this.state.lens('cursorPosition').set(newPos)
     }
 
-    getNodes(): ReadOnlyAtom<NodesForView> { //todo
-        return this.state.view(st => ({
-            inspections: st.inspections,
-            text: st.text,
-            cursorPosition: st.cursorPosition,
-        })).view(({ inspections, text, cursorPosition }) => {
+    getNodes(): Observable<NodesForView> { //todo gc
+        return this.state.map(({ inspections, text, cursorPosition }) => {
             let res = new OrderedMap<string, TextNode>()
             let nodesIndex: { [key: number]: TextNode } = {}
             let lastInsInd = 0
