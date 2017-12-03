@@ -16,14 +16,7 @@
   3) отримали правку з бекенду <- зміщуєм
 
 
-## Вузькі місця (алгоритмічно)
 
-1) https://gitlab.com/goloveychuk/editor/blob/master/frontend/src/models/index.ts#L83-122
-
-2) https://gitlab.com/goloveychuk/editor/blob/master/frontend/src/models/index.ts#L184-220
-зараз O(n) для любої зміни в text, cursor position, inspections
-    
-- можна уникнути перерахунку при зміні cursor position
 
 
 ## рендерінг
@@ -33,14 +26,15 @@
 https://gitlab.com/goloveychuk/editor/commit/dd03f1938ba2084627a7e452f8bcb819f5ede45e**
 
 
-В цілому лагів не помічаю. Тестив на Core2duo, 2gb. 
+## Performance
 
-Додав debouncer на відповідь з бекенду
+Найб проблема - https://gitlab.com/goloveychuk/editor/blob/master/frontend/src/models/index.ts#L187
+жре багато памяті, GC деколи спрацює і все притормажує на 30мс. Треба переписати.
 
 
 ## Асинхронний рендерінг
 Судячи по тому що у вас є деяке відставання зміщення підкреслення якщо зажати пробіл - рендерите асинхронно.
 
-Хз, може в мене нема логіки, яка сильно нагружає, но поки сенсу в асинх рен. не бачу. Хіба можливо для 100% pure editing experience :)
+Хз, може в мене нема логіки, яка сильно нагружає, но поки сенсу в асинх рен. не бачу. 
 
 
