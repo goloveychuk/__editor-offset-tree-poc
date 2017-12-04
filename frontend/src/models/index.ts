@@ -132,6 +132,32 @@ class Inspections {
             this.removed.set(id.toString(), true)                
         }
     }
+    textNodes(text: string, cursorPosition: number, cb: (n: TextNode)=>void) {
+        let lastInsInd = 0
+        for (const ins of this) {
+            if (ins.start !== lastInsInd) {
+                cb({
+                    id: `${ins.id}#`,
+                    text: text.substring(lastInsInd, ins.start)
+                })
+            }
+            const highlighted = cursorPosition >= ins.start && cursorPosition <= ins.end
+
+            cb({
+                text: text.substring(ins.start, ins.end),
+                id: ins.id.toString(),
+                isInspection: true,
+                highlighted
+            })
+            lastInsInd = ins.end;
+        }
+        if (lastInsInd !== text.length) {
+            cb({
+                id: 'last',
+                text: text.substring(lastInsInd)
+            })
+        }
+    }
     [Symbol.iterator]() {
         return this.inspections[Symbol.iterator]()
     }
@@ -152,6 +178,8 @@ class InspectionProxy {
         return this        
     }
 }
+
+
 
 export class StateModel {
     state: Atom<State>
@@ -195,38 +223,6 @@ export class StateModel {
     setCurPos(newPos: number) {
         this.state.lens('cursorPosition').set(newPos)
     }
-    getNodes(): Observable<NodesForView> { //todo gc
-        return this.state.map(({ inspections, text, cursorPosition }) => {
-            let res = new OrderedMap<string, TextNode>()
-            let nodesIndex: { [key: number]: TextNode } = {}
-            let lastInsInd = 0
-            for (const ins of inspections) {
-                if (ins.start !== lastInsInd) {
-                    res.add(`${ins.id}before`, {
-                        id: `${ins.id}before`,
-                        text: text.substring(lastInsInd, ins.start)
-                    })
-                }
-                const highlighted = cursorPosition >= ins.start && cursorPosition <= ins.end
-
-                const node = {
-                    text: text.substring(ins.start, ins.end),
-                    id: ins.id.toString(),
-                    isInspection: true,
-                    highlighted
-                }
-
-                res.add(node.id, node)
-                lastInsInd = ins.end;
-            }
-            if (lastInsInd !== text.length) {
-                res.add(`last`, {
-                    id: 'last',
-                    text: text.substring(lastInsInd)
-                })
-            }
-            return res
-        })
-    }
+    
 }
 

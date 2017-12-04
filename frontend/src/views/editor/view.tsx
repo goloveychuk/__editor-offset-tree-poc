@@ -25,17 +25,8 @@ export class TextareaView extends React.Component<Props> {
     componentDidMount() {
         const container = this.container!;
 
-        const renderer = new Renderer(container)
+        const renderer = new Renderer(container, this.props.state.state)
 
-        const nodes = this.props.state.getNodes()
-
-        this._sub = nodes.scan((prevNodes: NodesForView, newNodes: NodesForView) => {
-            renderer.compare(prevNodes, newNodes)
-            renderer.commitToDOM()
-            return newNodes
-        }).subscribe(() => {
-
-        })
     }
 
     render() {

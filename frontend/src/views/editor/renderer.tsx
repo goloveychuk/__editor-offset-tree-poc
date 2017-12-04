@@ -1,9 +1,10 @@
 // {
-import { NodesForView, TextNode } from '../../models'
+import { NodesForView, TextNode, State as ModelState } from '../../models'
+import { Observable } from 'rxjs'
 
 type NodeElement = HTMLSpanElement | Text
 
-namespace Updates {
+export namespace Updates {
 
     export enum UpdateType {
         removeNode,
@@ -68,8 +69,50 @@ export class Renderer {
     state = new State()
 
     updateQueue: Updates.UpdateQueue = []
-    constructor(readonly container: HTMLElement) {
+    constructor(readonly container: HTMLElement, stream: Observable<ModelState>) {
 
+        stream.scan(([cache, _]: [Map<string, TextNode>, any], { inspections, text, cursorPosition }: ModelState) => {
+            const updates: Updates.UpdateQueue = []
+            
+            const { added, removed } = inspections;
+            const res: TextNode[] = []
+            let lastKey: string | undefined = undefined
+            inspections.textNodes(text, cursorPosition, (node)=>{
+
+             
+                // if (removed.has(node.id)) {
+                //     cache.delete(node.id)
+                //     cache.delete(`${node.id}#`)
+                // }
+                const cachedNode = cache.get(node.id)
+                if (cachedNode === undefined) {
+                    cache.set(node.id, node)
+                    Renderer.insertNew(node, lastKey, updates)
+                } else {
+                    if (Renderer.checkNodeDiff(cachedNode, node, updates)) {
+                        cachedNode.text = node.text
+                        cachedNode.isInspection = node.isInspection
+                        cachedNode.highlighted = node.highlighted
+                    }
+                } 
+
+                lastKey = node.id
+            })
+
+            for (const [i,] of removed) {
+                updates.push({
+                    type: Updates.UpdateType.removeNode,
+                    key: i
+                })
+                cache.delete(i)
+                cache.delete(`${i}#`)
+            }
+
+            return [cache, updates]
+        }, [new Map<string, TextNode>(), []]).subscribe(([_, updates])=>{
+            this.updateQueue = updates
+            this.commitToDOM()
+        })
     }
 
     commitToDOM() {
@@ -113,56 +156,6 @@ export class Renderer {
         this.updateQueue = []
     }
 
-    compare(prevNodes: NodesForView, nextNodes: NodesForView) {
-        let prevInd = 0;
-        let nextInd = 0
-
-
-        const updates: Updates.UpdateQueue = []
-        let lastKey: string | undefined = undefined;
-
-        while (true) {
-
-            const prev = prevNodes.getByIndex(prevInd)
-            const next = nextNodes.getByIndex(nextInd)
-            if (prev === undefined && next === undefined) { //finish
-                break
-            } else if (prev === undefined) { //added new in the end
-                Renderer.insertNew(next, lastKey, updates)
-                nextInd += 1
-                lastKey = next.id
-            } else if (next === undefined) { //removed in the end
-                Renderer.removeOld(prev, updates)
-                prevInd += 1
-            } else if (prev.id !== next.id) { //nodes are different
-                if (prevNodes.has(next.id)) { // prev node is removed
-                    Renderer.removeOld(prev, updates)
-                    prevInd += 1
-                } else if (nextNodes.has(prev.id)) { // next node is added
-                    Renderer.insertNew(next, lastKey, updates)
-                    nextInd += 1
-                    lastKey = next.id
-                } else { //node was replaced completely
-                    updates.push({
-                        type: Updates.UpdateType.replaceNode,
-                        prevKey: prev.id,
-                        nextKey: next.id
-                    })
-                    Renderer.checkNodeDiff(prev, next, updates)
-                    nextInd += 1
-                    prevInd += 1
-                    lastKey = next.id
-                }
-            } else { //nodes are same, but maybe have changes 
-                Renderer.checkNodeDiff(prev, next, updates)
-                lastKey = next.id
-                prevInd += 1
-                nextInd += 1
-            }
-        }
-        this.updateQueue.push(...updates)
-        return updates
-    }
     static insertNew(next: TextNode, lastKey: string | undefined, updates: Updates.UpdateQueue) {
         updates.push({
             type: Updates.UpdateType.insertNode,
@@ -180,8 +173,10 @@ export class Renderer {
     }
 
 
-    static checkNodeDiff(prev: TextNode, next: TextNode, updates: Updates.UpdateQueue) {
+    static checkNodeDiff(prev: TextNode, next: TextNode, updates: Updates.UpdateQueue): boolean {
+        let hasDiff = false
         if (prev.text !== next.text) {
+            hasDiff = true
             updates.push({
                 type: Updates.UpdateType.replaceText,
                 text: next.text,
@@ -189,6 +184,7 @@ export class Renderer {
             })
         }
         if (prev.highlighted !== next.highlighted || prev.isInspection !== next.isInspection) {
+            hasDiff = true            
             updates.push({
                 type: Updates.UpdateType.replaceClass,
                 class: getClass(next),
@@ -196,6 +192,7 @@ export class Renderer {
             })
 
         }
+        return hasDiff
     }
 
 }
