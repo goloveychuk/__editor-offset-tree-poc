@@ -31,6 +31,7 @@ https://gitlab.com/goloveychuk/editor/commit/dd03f1938ba2084627a7e452f8bcb819f5e
 Найб проблема - https://gitlab.com/goloveychuk/editor/blob/master/frontend/src/models/index.ts#L187
 жре багато памяті, GC деколи спрацює і все притормажує на 30мс. Треба переписати.
 
+**upd: пофіксив: https://gitlab.com/goloveychuk/editor/commit/aa7440bdeb4b5b31893d128289326f529b903ede**
 
 ## Асинхронний рендерінг
 Судячи по тому що у вас є деяке відставання зміщення підкреслення якщо зажати пробіл - рендерите асинхронно.
