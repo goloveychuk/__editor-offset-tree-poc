@@ -6,18 +6,19 @@ import { Atom } from '@grammarly/focal';
 import { StateModel, Inspection } from '../../models';
 import { TextareaView } from './view';
 import { InputKeyboardEvent } from '../../utils'
-import * as Lodash from 'lodash';
+
 
 export class TextAreaWrapper {
     api: Api
     viewModel: StateModel
-    processApiMessages: ()=>void
-
-    apiQueue: Response.Response[] = []
 
     constructor(readonly node: HTMLTextAreaElement) {
         // this.node.onchange = this.onChange
-        this.api = new Api(this.onApiConnect, this.onApiMsg)
+        this.api = new Api()
+
+        this.api.messagesStream.bufferTime(500).subscribe(this.processApiMessages)
+        this.api.connectionStream.subscribe(this.onApiConnectionChange)
+
         this.api.connect()
         const overlay = new Textoverlay(node, { onInput: this.onInput, onCursorPosChange: this.onCurPosChange })
 
@@ -27,12 +28,12 @@ export class TextAreaWrapper {
             <TextareaView state={this.viewModel} />,
             overlay.getContainer()
         )
-        this.processApiMessages = Lodash.throttle(this._processApiMessages, 500)
 
     }
-    _processApiMessages = () => {
+    processApiMessages = (responses: Response.Response[]) => {
+
         this.viewModel.modifyInspections((proxy) => {
-            for (const resp of this.apiQueue) {
+            for (const resp of responses) {
                 switch (resp.type) {
                     case Response.Type.AddInspection:
                         proxy.add(resp)
@@ -45,22 +46,17 @@ export class TextAreaWrapper {
                         break;
                 }
             }
-            this.apiQueue = []
             return proxy
         })
     }
-    onApiMsg = (resp: Response.Response) => {
-        console.log(resp)
-        this.apiQueue.push(resp)
-        this.processApiMessages()
-    }
 
-    onApiConnect = () => { //todo sync
-        this.viewModel.reset()
-        this.apiQueue = []
-        const text = this.viewModel.state.lens('text').get();
-        const req: Request.ModifydReq = { start: 0, end: 0, text: text, type: Request.Type.Modify, rev: 0 }
-        this.api.send(req)
+    onApiConnectionChange = (connected: boolean) => {
+        if (connected === true) {
+            this.viewModel.reset()
+            const text = this.viewModel.state.lens('text').get();
+            const req: Request.ModifydReq = { start: 0, end: 0, text: text, type: Request.Type.Modify, rev: 0 }
+            this.api.send(req)
+        }
     }
 
     onInput = (event: InputKeyboardEvent, cursorPos: number) => {

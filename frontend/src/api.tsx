@@ -1,5 +1,6 @@
 const config = require('./config.json')
 import {Inspection} from './models';
+import {Observable, Observer} from 'rxjs'
 
 export namespace Request {
     interface BaseReq {
@@ -58,25 +59,35 @@ class JsonSerializer implements ApiSerializer {
 }
 
 
-type MsgCb = (resp: Response.Response) => void
+
+export type ApiEvent = {kind: 'connected'} | {kind: 'msg', msg: Response.Response}
 
 export class Api {
     private ws: WebSocket
     private connected = false
-
+    messagesStream: Observable<Response.Response>
+    connectionStream: Observable<boolean>
+    private nextMsg: (ev: Response.Response) => void
+    private nextConnStatus: (connected: boolean) => void
     private serializer: ApiSerializer = new JsonSerializer()
 
-    constructor(private onConnect:()=>void, private onMsgCb: MsgCb) {
-
+    constructor() {
+        this.messagesStream = Observable.create((observer: Observer<Response.Response>) => {
+            this.nextMsg = observer.next.bind(observer)
+        })
+        this.connectionStream = Observable.create((observer: Observer<boolean>) => {
+            this.nextConnStatus = observer.next.bind(observer)
+        })
     }
     connect() {
         this.ws = new WebSocket(config.api.endpoint)
         this.ws.onopen = () => {
             this.connected = true
-            this.onConnect()
+            this.nextConnStatus(true)
         }
         this.ws.onclose = () => {
             this.connected = false
+            this.nextConnStatus(false)
             setTimeout(()=>{
                 this.connect()
             }, 1000)
@@ -93,10 +104,8 @@ export class Api {
     }
     private onMessage = (ev: MessageEvent) => {
         const resp = this.serializer.deserialize(ev.data)
-        this.onMsgCb(resp)
+        this.nextMsg(resp)
     }
-
-
 }
 
 
