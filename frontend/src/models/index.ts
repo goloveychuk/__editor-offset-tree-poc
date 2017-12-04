@@ -73,7 +73,10 @@ export type NodesForView = OrderedMap<string, TextNode>
 
 
 class Inspections {
-    private inspections: Inspection[]
+    added = new Map<string, boolean>()
+    removed = new Map<string, boolean>()
+
+    inspections: Inspection[]
     constructor(initialInspections?: Inspection[]) {
         if (initialInspections !== undefined) {
             this.inspections = initialInspections
@@ -104,11 +107,9 @@ class Inspections {
             ins.start = newStart
             ins.end = newEnd
         }
-
     }
     offset(diffs: Diff[]) {
         Inspections._offset(this.inspections, diffs)
-        return this
     }
     add(inspection: Inspection, revisionsData: RevisionsData) {  //todo O(logn)
         const diffs = revisionsData.getDiffs(inspection.rev)
@@ -117,11 +118,19 @@ class Inspections {
         
         const newInspections = [inspection].concat(this.inspections)
         newInspections.sort((a, b) => a.start - b.start)
+        this.inspections = newInspections
 
-        return new Inspections(newInspections)
+        this.added.set(inspection.id.toString(), true)        
     }
     remove(id: number) { //todo o(1)
-        return new Inspections(this.inspections.filter(ins => ins.id !== id))
+        this.inspections = this.inspections.filter(ins => ins.id !== id)
+        const idStr = id.toString()
+
+        if (this.added.has(idStr)) {
+            this.added.delete(idStr)
+        } else {
+            this.removed.set(id.toString(), true)                
+        }
     }
     [Symbol.iterator]() {
         return this.inspections[Symbol.iterator]()
@@ -130,15 +139,16 @@ class Inspections {
 }
 
 class InspectionProxy {
+    
     constructor(public inspections: Inspections, private revisionsData: RevisionsData) {
 
     }
     add(inspection: Inspection) {
-        this.inspections = this.inspections.add(inspection, this.revisionsData)
+        this.inspections.add(inspection, this.revisionsData)
         return this
     }
     remove(id: number) {
-        this.inspections = this.inspections.remove(id)
+        this.inspections.remove(id)  
         return this        
     }
 }
@@ -154,8 +164,9 @@ export class StateModel {
 
     modifyInspections(cb: (ins: InspectionProxy) => InspectionProxy) {
         this.state.lens('inspections').modify(inspections => {
-            const res = cb(new InspectionProxy(inspections, this.revisionsData))
-            return res.inspections
+            const newInspections = new Inspections(inspections.inspections)
+            cb(new InspectionProxy(newInspections, this.revisionsData))
+            return newInspections
         })
     }
     reset() {
@@ -171,7 +182,8 @@ export class StateModel {
 
         this.state.modify(state => {
             const { text, inspections } = state;
-            let newInspections = inspections.offset([diff!])
+            let newInspections = new Inspections(inspections.inspections)
+            newInspections.offset([diff!])
             // validateDiff(text, newText, diff)
 
             return Object.assign({}, state, { cursorPosition, text: newText, inspections: newInspections })
@@ -183,7 +195,6 @@ export class StateModel {
     setCurPos(newPos: number) {
         this.state.lens('cursorPosition').set(newPos)
     }
-
     getNodes(): Observable<NodesForView> { //todo gc
         return this.state.map(({ inspections, text, cursorPosition }) => {
             let res = new OrderedMap<string, TextNode>()

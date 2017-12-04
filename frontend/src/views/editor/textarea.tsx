@@ -31,7 +31,9 @@ export class TextAreaWrapper {
 
     }
     processApiMessages = (responses: Response.Response[]) => {
-
+        if (responses.length === 0) {
+            return
+        }
         this.viewModel.modifyInspections((proxy) => {
             for (const resp of responses) {
                 switch (resp.type) {
