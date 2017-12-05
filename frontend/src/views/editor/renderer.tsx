@@ -10,8 +10,7 @@ export namespace Updates {
         removeNode,
         insertNode,
         replaceText,
-        replaceNode,
-        replaceClass
+        replaceAttribute
     }
 
 
@@ -20,7 +19,7 @@ export namespace Updates {
         afterKey: string | undefined // undefined for first
         text: string
         key: string
-        class: string
+        nodeType: 'span' | 'text'
     }
 
     interface RemoveUpdate {
@@ -33,36 +32,29 @@ export namespace Updates {
         key: string
         text: string
     }
-    interface ReplaceClass {
-        type: UpdateType.replaceClass,
+    interface ReplaceAttribute {
+        type: UpdateType.replaceAttribute,
         key: string
-        class: string
-    }
-    interface ReplaceNodeUpdate {
-        type: UpdateType.replaceNode
-        prevKey: string
-        nextKey: string
+        attr: string
+        value?: string
     }
 
-    export type Update = InsertUpdate | RemoveUpdate | ReplaceTextUpdate | ReplaceNodeUpdate | ReplaceClass
+
+    export type Update = InsertUpdate | RemoveUpdate | ReplaceTextUpdate | ReplaceAttribute
 
     export type UpdateQueue = Update[]
 
 }
 
 class State {
-    elements = new Map<string, HTMLSpanElement>()
+    elements = new Map<string, HTMLSpanElement | Text>()
 }
 
 function getClass(nod: TextNode) {
-    let res = ''
-    if (nod.isInspection) {
-        res += ' inspection'
-    }
     if (nod.highlighted) {
-        res += ' highlighted'
+        return 'highlighted'
     }
-    return res
+    return undefined
 }
 
 export class Renderer {
@@ -73,13 +65,14 @@ export class Renderer {
 
         stream.scan(([cache, _]: [Map<string, TextNode>, any], { inspections, text, cursorPosition }: ModelState) => {
             const updates: Updates.UpdateQueue = []
-            
+
             const { added, removed } = inspections;
             const res: TextNode[] = []
             let lastKey: string | undefined = undefined
-            inspections.textNodes(text, cursorPosition, (node)=>{
 
-             
+            inspections.textNodes(text, cursorPosition, (node) => {
+
+
                 // if (removed.has(node.id)) {
                 //     cache.delete(node.id)
                 //     cache.delete(`${node.id}#`)
@@ -94,7 +87,7 @@ export class Renderer {
                         cachedNode.isInspection = node.isInspection
                         cachedNode.highlighted = node.highlighted
                     }
-                } 
+                }
 
                 lastKey = node.id
             })
@@ -104,12 +97,19 @@ export class Renderer {
                     type: Updates.UpdateType.removeNode,
                     key: i
                 })
+
                 cache.delete(i)
-                cache.delete(`${i}#`)
+                if (cache.delete(`${i}#`)) {
+                    updates.push({
+                        type: Updates.UpdateType.removeNode,
+                        key: `${i}#`
+                    })
+                }
             }
 
+
             return [cache, updates]
-        }, [new Map<string, TextNode>(), []]).subscribe(([_, updates])=>{
+        }, [new Map<string, TextNode>(), []]).subscribe(([_, updates]) => {
             this.updateQueue = updates
             this.commitToDOM()
         })
@@ -118,38 +118,54 @@ export class Renderer {
     commitToDOM() {
         const elements = this.state.elements;
         const { container } = this;
+
+        let prevKey = undefined
+        let nod = undefined as any as HTMLSpanElement | Text
+
         console.log(this.updateQueue.length)
         for (const u of this.updateQueue) {
+            if (prevKey !== u.key) {
+                nod = elements.get(u.key)!
+            }
             switch (u.type) {
                 case Updates.UpdateType.insertNode:
-                    const nod1 = document.createElement('span')
-                    nod1.innerText = u.text
-                    nod1.setAttribute('class', u.class)
-                    elements.set(u.key, nod1)
+                    if (u.nodeType === 'span') {
+                        nod = document.createElement('span')
+                        nod.innerText = u.text
+                    } else {
+                        nod = document.createTextNode(u.text)
+                    }
+                    elements.set(u.key, nod)
                     let insertBefore
                     if (u.afterKey !== undefined) {
                         insertBefore = elements.get(u.afterKey)!.nextSibling
                     } else {
                         insertBefore = container.firstChild;
                     }
-                    container.insertBefore(nod1, insertBefore)
+                    container.insertBefore(nod, insertBefore)
                     break
                 case Updates.UpdateType.removeNode:
-                    const nod2 = elements.get(u.key)!
-                    nod2.remove()
+                    nod.remove()
                     elements.delete(u.key)
-                    break
-                case Updates.UpdateType.replaceNode:
-                    elements.set(u.nextKey, elements.get(u.prevKey)!)
-                    elements.delete(u.prevKey)
                     break
                 case Updates.UpdateType.replaceText:
                     const nod3 = elements.get(u.key)!
-                    nod3.innerText = u.text
+                    switch (nod3.nodeType) {
+                        case 3:
+                            (nod3 as Text).data = u.text;
+                            break
+                        case 1:
+                            (nod3 as HTMLSpanElement).innerText = u.text;
+                            break
+                    }
                     break
-                case Updates.UpdateType.replaceClass:
-                    const nod4 = elements.get(u.key)!
-                    nod4.setAttribute('class', u.class)
+                case Updates.UpdateType.replaceAttribute:
+                    let n = nod as HTMLSpanElement;
+                    if (u.value === undefined) {
+                        n.removeAttribute(u.attr)
+                    } else {
+                        n.setAttribute(u.attr, u.value);
+                    }
                     break
             }
         }
@@ -159,11 +175,20 @@ export class Renderer {
     static insertNew(next: TextNode, lastKey: string | undefined, updates: Updates.UpdateQueue) {
         updates.push({
             type: Updates.UpdateType.insertNode,
-            class: getClass(next),
+            nodeType: next.isInspection ? 'span' : 'text',
             text: next.text,
             afterKey: lastKey,
             key: next.id,
         })
+        const className = getClass(next)
+        if (next.isInspection && className !== undefined) {
+            updates.push({
+                type: Updates.UpdateType.replaceAttribute,
+                attr: 'class',
+                value: className,
+                key: next.id
+            })
+        }
     }
     static removeOld(prev: TextNode, updates: Updates.UpdateQueue) {
         updates.push({
@@ -183,11 +208,12 @@ export class Renderer {
                 key: next.id
             })
         }
-        if (prev.highlighted !== next.highlighted || prev.isInspection !== next.isInspection) {
-            hasDiff = true            
+        if (prev.highlighted !== next.highlighted || prev.isInspection !== next.isInspection) { //todo changing status should change node type
+            hasDiff = true
             updates.push({
-                type: Updates.UpdateType.replaceClass,
-                class: getClass(next),
+                type: Updates.UpdateType.replaceAttribute,
+                attr: 'class',
+                value: getClass(next),
                 key: next.id
             })
 

@@ -26,12 +26,12 @@ body {
 
  
 
-.inspection {
+.textNodesContainer > span {
   border-bottom: 4px solid red;
+  
 }
 
-
-.inspection.highlighted {
+.textNodesContainer > span.highlighted {
   background: #fcaeae;
   transition: background 0.3s ease;
 }

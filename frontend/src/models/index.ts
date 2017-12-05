@@ -221,7 +221,9 @@ export class StateModel {
 
     }
     setCurPos(newPos: number) {
-        this.state.lens('cursorPosition').set(newPos)
+        this.state.modify(state => {
+            return Object.assign({}, state, {'cursorPosition': newPos, inspections: new Inspections(state.inspections.inspections)})
+        })
     }
     
 }

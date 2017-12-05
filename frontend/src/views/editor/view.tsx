@@ -30,7 +30,7 @@ export class TextareaView extends React.Component<Props> {
     }
 
     render() {
-        return <span ref={(ref) => { this.container = ref }} />
+        return <span className='textNodesContainer' ref={(ref) => { this.container = ref }} />
     }
 }
 

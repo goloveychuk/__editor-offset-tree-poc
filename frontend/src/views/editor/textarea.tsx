@@ -36,6 +36,7 @@ export class TextAreaWrapper {
         }
         this.viewModel.modifyInspections((proxy) => {
             for (const resp of responses) {
+                console.log(resp)
                 switch (resp.type) {
                     case Response.Type.AddInspection:
                         proxy.add(resp)
