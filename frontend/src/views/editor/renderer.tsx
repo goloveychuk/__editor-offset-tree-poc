@@ -66,13 +66,14 @@ export class Renderer {
         stream.scan(([cache, _]: [Map<string, TextNode>, any], { inspections, text, cursorPosition }: ModelState) => {
             const updates: Updates.UpdateQueue = []
 
-            const { added, removed } = inspections;
             const res: TextNode[] = []
             let lastKey: string | undefined = undefined
-
+            const found = new Set<string>()
             inspections.textNodes(text, cursorPosition, (id, text, isInspection, highlighted) => {
-
-
+                if (text === '') {
+                    return //todo remove inspections when text modified
+                }
+                found.add(id)
                 // if (removed.has(node.id)) {
                 //     cache.delete(node.id)
                 //     cache.delete(`${node.id}#`)
@@ -105,23 +106,16 @@ export class Renderer {
 
                 lastKey = id
             })
-
-            for (const [i,] of removed) {
+            for (const [i,] of cache) {
+                if (found.has(i)) {
+                    continue
+                }
                 updates.push({
                     type: Updates.UpdateType.removeNode,
                     key: i
                 })
-
                 cache.delete(i)
-                if (cache.delete(`${i}#`)) {
-                    updates.push({
-                        type: Updates.UpdateType.removeNode,
-                        key: `${i}#`
-                    })
-                }
             }
-
-
             return [cache, updates]
         }, [new Map<string, TextNode>(), []]).subscribe(([_, updates]) => {
             this.updateQueue = updates

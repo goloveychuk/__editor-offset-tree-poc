@@ -73,9 +73,6 @@ export type NodesForView = OrderedMap<string, TextNode>
 
 
 class Inspections {
-    added = new Map<string, boolean>()
-    removed = new Map<string, boolean>()
-
     inspections: Inspection[]
     constructor(initialInspections?: Inspection[]) {
         if (initialInspections !== undefined) {
@@ -119,18 +116,10 @@ class Inspections {
         const newInspections = [inspection].concat(this.inspections)
         newInspections.sort((a, b) => a.start - b.start)
         this.inspections = newInspections
-
-        this.added.set(inspection.id.toString(), true)        
     }
     remove(id: number) { //todo o(1)
         this.inspections = this.inspections.filter(ins => ins.id !== id)
         const idStr = id.toString()
-
-        if (this.added.has(idStr)) {
-            this.added.delete(idStr)
-        } else {
-            this.removed.set(id.toString(), true)                
-        }
     }
     textNodes(text: string, cursorPosition: number, cb: (id: string, text: string, isInspection?: boolean, highlighted?: boolean)=>void) {
         let lastInsInd = 0
@@ -211,7 +200,7 @@ export class StateModel {
     }
     setCurPos(newPos: number) {
         this.state.modify(state => {
-            return Object.assign({}, state, {'cursorPosition': newPos, inspections: new Inspections(state.inspections.inspections)})
+            return Object.assign({}, state, {'cursorPosition': newPos})
         })
     }
     
