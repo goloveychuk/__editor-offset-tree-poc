@@ -132,30 +132,19 @@ class Inspections {
             this.removed.set(id.toString(), true)                
         }
     }
-    textNodes(text: string, cursorPosition: number, cb: (n: TextNode)=>void) {
+    textNodes(text: string, cursorPosition: number, cb: (id: string, text: string, isInspection?: boolean, highlighted?: boolean)=>void) {
         let lastInsInd = 0
         for (const ins of this) {
             if (ins.start !== lastInsInd) {
-                cb({
-                    id: `${ins.id}#`,
-                    text: text.substring(lastInsInd, ins.start)
-                })
+                cb(`${ins.id}#`, text.substring(lastInsInd, ins.start))
             }
             const highlighted = cursorPosition >= ins.start && cursorPosition <= ins.end
 
-            cb({
-                text: text.substring(ins.start, ins.end),
-                id: ins.id.toString(),
-                isInspection: true,
-                highlighted
-            })
+            cb(ins.id.toString(), text.substring(ins.start, ins.end), true,   highlighted)
             lastInsInd = ins.end;
         }
         if (lastInsInd !== text.length) {
-            cb({
-                id: 'last',
-                text: text.substring(lastInsInd)
-            })
+            cb('last',text.substring(lastInsInd))
         }
     }
     [Symbol.iterator]() {

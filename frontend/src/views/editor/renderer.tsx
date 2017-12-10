@@ -50,8 +50,8 @@ class State {
     elements = new Map<string, HTMLSpanElement | Text>()
 }
 
-function getClass(nod: TextNode) {
-    if (nod.highlighted) {
+function getClass(highlighted?: boolean) {
+    if (highlighted) {
         return 'highlighted'
     }
     return undefined
@@ -70,26 +70,40 @@ export class Renderer {
             const res: TextNode[] = []
             let lastKey: string | undefined = undefined
 
-            inspections.textNodes(text, cursorPosition, (node) => {
+            inspections.textNodes(text, cursorPosition, (id, text, isInspection, highlighted) => {
 
 
                 // if (removed.has(node.id)) {
                 //     cache.delete(node.id)
                 //     cache.delete(`${node.id}#`)
                 // }
-                const cachedNode = cache.get(node.id)
+                const cachedNode = cache.get(id)
                 if (cachedNode === undefined) {
-                    cache.set(node.id, node)
+                    const node: TextNode = {id, text, isInspection, highlighted}
+                    cache.set(id, node)
                     Renderer.insertNew(node, lastKey, updates)
                 } else {
-                    if (Renderer.checkNodeDiff(cachedNode, node, updates)) {
-                        cachedNode.text = node.text
-                        cachedNode.isInspection = node.isInspection
-                        cachedNode.highlighted = node.highlighted
+                    if (cachedNode.text !== text) {
+                        updates.push({
+                            type: Updates.UpdateType.replaceText,
+                            text,
+                            key: id
+                        })
+                        cachedNode.text = text
+                    }
+                    if (cachedNode.highlighted !== highlighted || cachedNode.isInspection !== isInspection) { //todo changing status should change node type
+                        updates.push({
+                            type: Updates.UpdateType.replaceAttribute,
+                            attr: 'class',
+                            value: getClass(highlighted),
+                            key: id
+                        })
+                        cachedNode.highlighted = highlighted
+                        cachedNode.isInspection = isInspection
                     }
                 }
 
-                lastKey = node.id
+                lastKey = id
             })
 
             for (const [i,] of removed) {
@@ -180,7 +194,7 @@ export class Renderer {
             afterKey: lastKey,
             key: next.id,
         })
-        const className = getClass(next)
+        const className = getClass(next.highlighted)
         if (next.isInspection && className !== undefined) {
             updates.push({
                 type: Updates.UpdateType.replaceAttribute,
@@ -195,30 +209,6 @@ export class Renderer {
             type: Updates.UpdateType.removeNode,
             key: prev.id
         })
-    }
-
-
-    static checkNodeDiff(prev: TextNode, next: TextNode, updates: Updates.UpdateQueue): boolean {
-        let hasDiff = false
-        if (prev.text !== next.text) {
-            hasDiff = true
-            updates.push({
-                type: Updates.UpdateType.replaceText,
-                text: next.text,
-                key: next.id
-            })
-        }
-        if (prev.highlighted !== next.highlighted || prev.isInspection !== next.isInspection) { //todo changing status should change node type
-            hasDiff = true
-            updates.push({
-                type: Updates.UpdateType.replaceAttribute,
-                attr: 'class',
-                value: getClass(next),
-                key: next.id
-            })
-
-        }
-        return hasDiff
     }
 
 }
