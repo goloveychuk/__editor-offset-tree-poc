@@ -1,16 +1,16 @@
 // {
-import { NodesForView, TextNode } from '../../models'
+import { NodesForView, TextNode, State as ModelState } from '../../models'
+import { Observable } from 'rxjs'
 
 type NodeElement = HTMLSpanElement | Text
 
-namespace Updates {
+export namespace Updates {
 
     export enum UpdateType {
         removeNode,
         insertNode,
         replaceText,
-        replaceNode,
-        replaceClass
+        replaceAttribute
     }
 
 
@@ -19,7 +19,7 @@ namespace Updates {
         afterKey: string | undefined // undefined for first
         text: string
         key: string
-        class: string
+        nodeType: 'span' | 'text'
     }
 
     interface RemoveUpdate {
@@ -32,170 +32,177 @@ namespace Updates {
         key: string
         text: string
     }
-    interface ReplaceClass {
-        type: UpdateType.replaceClass,
+    interface ReplaceAttribute {
+        type: UpdateType.replaceAttribute,
         key: string
-        class: string
-    }
-    interface ReplaceNodeUpdate {
-        type: UpdateType.replaceNode
-        prevKey: string
-        nextKey: string
+        attr: string
+        value?: string
     }
 
-    export type Update = InsertUpdate | RemoveUpdate | ReplaceTextUpdate | ReplaceNodeUpdate | ReplaceClass
+
+    export type Update = InsertUpdate | RemoveUpdate | ReplaceTextUpdate | ReplaceAttribute
 
     export type UpdateQueue = Update[]
 
 }
 
 class State {
-    elements = new Map<string, HTMLSpanElement>()
+    elements = new Map<string, HTMLSpanElement | Text>()
 }
 
-function getClass(nod: TextNode) {
-    let res = ''
-    if (nod.isInspection) {
-        res += ' inspection'
+function getClass(highlighted?: boolean) {
+    if (highlighted) {
+        return 'highlighted'
     }
-    if (nod.highlighted) {
-        res += ' highlighted'
-    }
-    return res
+    return undefined
 }
 
 export class Renderer {
     state = new State()
 
     updateQueue: Updates.UpdateQueue = []
-    constructor(readonly container: HTMLElement) {
+    constructor(readonly container: HTMLElement, stream: Observable<ModelState>) {
 
+        stream.scan(([cache, _]: [Map<string, TextNode>, any], { inspections, text, cursorPosition }: ModelState) => {
+            const updates: Updates.UpdateQueue = []
+
+            const res: TextNode[] = []
+            let lastKey: string | undefined = undefined
+            const found = new Set<string>()
+            inspections.textNodes(text, cursorPosition, (id, text, isInspection, highlighted) => {
+                if (text === '') {
+                    return //todo remove inspections when text modified
+                }
+                found.add(id)
+                // if (removed.has(node.id)) {
+                //     cache.delete(node.id)
+                //     cache.delete(`${node.id}#`)
+                // }
+                const cachedNode = cache.get(id)
+                if (cachedNode === undefined) {
+                    const node: TextNode = {id, text, isInspection, highlighted}
+                    cache.set(id, node)
+                    Renderer.insertNew(node, lastKey, updates)
+                } else {
+                    if (cachedNode.text !== text) {
+                        updates.push({
+                            type: Updates.UpdateType.replaceText,
+                            text,
+                            key: id
+                        })
+                        cachedNode.text = text
+                    }
+                    if (cachedNode.highlighted !== highlighted || cachedNode.isInspection !== isInspection) { //todo changing status should change node type
+                        updates.push({
+                            type: Updates.UpdateType.replaceAttribute,
+                            attr: 'class',
+                            value: getClass(highlighted),
+                            key: id
+                        })
+                        cachedNode.highlighted = highlighted
+                        cachedNode.isInspection = isInspection
+                    }
+                }
+
+                lastKey = id
+            })
+            for (const [i,] of cache) {
+                if (found.has(i)) {
+                    continue
+                }
+                updates.push({
+                    type: Updates.UpdateType.removeNode,
+                    key: i
+                })
+                cache.delete(i)
+            }
+            return [cache, updates]
+        }, [new Map<string, TextNode>(), []]).subscribe(([_, updates]) => {
+            this.updateQueue = updates
+            this.commitToDOM()
+        })
     }
 
     commitToDOM() {
         const elements = this.state.elements;
         const { container } = this;
+
+        let prevKey = undefined
+        let nod = undefined as any as HTMLSpanElement | Text
+
         console.log(this.updateQueue.length)
         for (const u of this.updateQueue) {
+            if (prevKey !== u.key) {
+                nod = elements.get(u.key)!
+            }
             switch (u.type) {
                 case Updates.UpdateType.insertNode:
-                    const nod1 = document.createElement('span')
-                    nod1.innerText = u.text
-                    nod1.setAttribute('class', u.class)
-                    elements.set(u.key, nod1)
+                    if (u.nodeType === 'span') {
+                        nod = document.createElement('span')
+                        nod.innerText = u.text
+                    } else {
+                        nod = document.createTextNode(u.text)
+                    }
+                    elements.set(u.key, nod)
                     let insertBefore
                     if (u.afterKey !== undefined) {
                         insertBefore = elements.get(u.afterKey)!.nextSibling
                     } else {
                         insertBefore = container.firstChild;
                     }
-                    container.insertBefore(nod1, insertBefore)
+                    container.insertBefore(nod, insertBefore)
                     break
                 case Updates.UpdateType.removeNode:
-                    const nod2 = elements.get(u.key)!
-                    nod2.remove()
+                    nod.remove()
                     elements.delete(u.key)
-                    break
-                case Updates.UpdateType.replaceNode:
-                    elements.set(u.nextKey, elements.get(u.prevKey)!)
-                    elements.delete(u.prevKey)
                     break
                 case Updates.UpdateType.replaceText:
                     const nod3 = elements.get(u.key)!
-                    nod3.innerText = u.text
+                    switch (nod3.nodeType) {
+                        case 3:
+                            (nod3 as Text).data = u.text;
+                            break
+                        case 1:
+                            (nod3 as HTMLSpanElement).innerText = u.text;
+                            break
+                    }
                     break
-                case Updates.UpdateType.replaceClass:
-                    const nod4 = elements.get(u.key)!
-                    nod4.setAttribute('class', u.class)
+                case Updates.UpdateType.replaceAttribute:
+                    let n = nod as HTMLSpanElement;
+                    if (u.value === undefined) {
+                        n.removeAttribute(u.attr)
+                    } else {
+                        n.setAttribute(u.attr, u.value);
+                    }
                     break
             }
         }
         this.updateQueue = []
     }
 
-    compare(prevNodes: NodesForView, nextNodes: NodesForView) {
-        let prevInd = 0;
-        let nextInd = 0
-
-
-        const updates: Updates.UpdateQueue = []
-        let lastKey: string | undefined = undefined;
-
-        while (true) {
-
-            const prev = prevNodes.getByIndex(prevInd)
-            const next = nextNodes.getByIndex(nextInd)
-            if (prev === undefined && next === undefined) { //finish
-                break
-            } else if (prev === undefined) { //added new in the end
-                Renderer.insertNew(next, lastKey, updates)
-                nextInd += 1
-                lastKey = next.id
-            } else if (next === undefined) { //removed in the end
-                Renderer.removeOld(prev, updates)
-                prevInd += 1
-            } else if (prev.id !== next.id) { //nodes are different
-                if (prevNodes.has(next.id)) { // prev node is removed
-                    Renderer.removeOld(prev, updates)
-                    prevInd += 1
-                } else if (nextNodes.has(prev.id)) { // next node is added
-                    Renderer.insertNew(next, lastKey, updates)
-                    nextInd += 1
-                    lastKey = next.id
-                } else { //node was replaced completely
-                    updates.push({
-                        type: Updates.UpdateType.replaceNode,
-                        prevKey: prev.id,
-                        nextKey: next.id
-                    })
-                    Renderer.checkNodeDiff(prev, next, updates)
-                    nextInd += 1
-                    prevInd += 1
-                    lastKey = next.id
-                }
-            } else { //nodes are same, but maybe have changes 
-                Renderer.checkNodeDiff(prev, next, updates)
-                lastKey = next.id
-                prevInd += 1
-                nextInd += 1
-            }
-        }
-        this.updateQueue.push(...updates)
-        return updates
-    }
     static insertNew(next: TextNode, lastKey: string | undefined, updates: Updates.UpdateQueue) {
         updates.push({
             type: Updates.UpdateType.insertNode,
-            class: getClass(next),
+            nodeType: next.isInspection ? 'span' : 'text',
             text: next.text,
             afterKey: lastKey,
             key: next.id,
         })
+        const className = getClass(next.highlighted)
+        if (next.isInspection && className !== undefined) {
+            updates.push({
+                type: Updates.UpdateType.replaceAttribute,
+                attr: 'class',
+                value: className,
+                key: next.id
+            })
+        }
     }
     static removeOld(prev: TextNode, updates: Updates.UpdateQueue) {
         updates.push({
             type: Updates.UpdateType.removeNode,
             key: prev.id
         })
-    }
-
-
-    static checkNodeDiff(prev: TextNode, next: TextNode, updates: Updates.UpdateQueue) {
-        if (prev.text !== next.text) {
-            updates.push({
-                type: Updates.UpdateType.replaceText,
-                text: next.text,
-                key: next.id
-            })
-        }
-        if (prev.highlighted !== next.highlighted || prev.isInspection !== next.isInspection) {
-            updates.push({
-                type: Updates.UpdateType.replaceClass,
-                class: getClass(next),
-                key: next.id
-            })
-
-        }
     }
 
 }

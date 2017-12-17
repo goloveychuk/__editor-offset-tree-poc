@@ -73,9 +73,6 @@ export type NodesForView = OrderedMap<string, TextNode>
 
 
 class Inspections {
-    added = new Map<string, boolean>()
-    removed = new Map<string, boolean>()
-
     inspections: Inspection[]
     constructor(initialInspections?: Inspection[]) {
         if (initialInspections !== undefined) {
@@ -119,17 +116,24 @@ class Inspections {
         const newInspections = [inspection].concat(this.inspections)
         newInspections.sort((a, b) => a.start - b.start)
         this.inspections = newInspections
-
-        this.added.set(inspection.id.toString(), true)        
     }
     remove(id: number) { //todo o(1)
         this.inspections = this.inspections.filter(ins => ins.id !== id)
         const idStr = id.toString()
+    }
+    textNodes(text: string, cursorPosition: number, cb: (id: string, text: string, isInspection?: boolean, highlighted?: boolean)=>void) {
+        let lastInsInd = 0
+        for (const ins of this) {
+            if (ins.start !== lastInsInd) {
+                cb(`${ins.id}#`, text.substring(lastInsInd, ins.start))
+            }
+            const highlighted = cursorPosition >= ins.start && cursorPosition <= ins.end
 
-        if (this.added.has(idStr)) {
-            this.added.delete(idStr)
-        } else {
-            this.removed.set(id.toString(), true)                
+            cb(ins.id.toString(), text.substring(ins.start, ins.end), true,   highlighted)
+            lastInsInd = ins.end;
+        }
+        if (lastInsInd !== text.length) {
+            cb('last',text.substring(lastInsInd))
         }
     }
     [Symbol.iterator]() {
@@ -152,6 +156,8 @@ class InspectionProxy {
         return this        
     }
 }
+
+
 
 export class StateModel {
     state: Atom<State>
@@ -193,40 +199,10 @@ export class StateModel {
 
     }
     setCurPos(newPos: number) {
-        this.state.lens('cursorPosition').set(newPos)
-    }
-    getNodes(): Observable<NodesForView> { //todo gc
-        return this.state.map(({ inspections, text, cursorPosition }) => {
-            let res = new OrderedMap<string, TextNode>()
-            let nodesIndex: { [key: number]: TextNode } = {}
-            let lastInsInd = 0
-            for (const ins of inspections) {
-                if (ins.start !== lastInsInd) {
-                    res.add(`${ins.id}before`, {
-                        id: `${ins.id}before`,
-                        text: text.substring(lastInsInd, ins.start)
-                    })
-                }
-                const highlighted = cursorPosition >= ins.start && cursorPosition <= ins.end
-
-                const node = {
-                    text: text.substring(ins.start, ins.end),
-                    id: ins.id.toString(),
-                    isInspection: true,
-                    highlighted
-                }
-
-                res.add(node.id, node)
-                lastInsInd = ins.end;
-            }
-            if (lastInsInd !== text.length) {
-                res.add(`last`, {
-                    id: 'last',
-                    text: text.substring(lastInsInd)
-                })
-            }
-            return res
+        this.state.modify(state => {
+            return Object.assign({}, state, {'cursorPosition': newPos})
         })
     }
+    
 }
 
