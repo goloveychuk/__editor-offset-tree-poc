@@ -4,7 +4,7 @@ import { getDiff, validateDiff, Diff, InputKeyboardEvent } from '../utils'
 import { ReadOnlyAtom } from '@grammarly/focal/dist/src/atom/base';
 import { inspect } from 'util';
 import { retry } from 'rxjs/operators/retry';
-import {OrderedMap} from '../structs'
+import { OrderedMap } from '../structs'
 import { Observable, ObservableInput } from 'rxjs/Observable'
 
 export enum InspectionType {
@@ -56,7 +56,7 @@ class RevisionsData {
         this.removeDiffs(rev)
         return this.buffer;
     }
-   
+
     removeDiffs(rev: number) {
         const toRemoveInd = this.buffer.findIndex(i => i.rev > rev)
         if (toRemoveInd === -1) {
@@ -73,13 +73,18 @@ export type NodesForView = OrderedMap<string, TextNode>
 
 
 class Inspections {
-    inspections: Inspection[]
-    constructor(initialInspections?: Inspection[]) {
-        if (initialInspections !== undefined) {
-            this.inspections = initialInspections
-        } else {
-            this.inspections = []
-        }
+    private inspections: Inspection[]
+    private idIndex: Map<number, Inspection>
+    constructor() {
+        this.inspections = []
+        this.idIndex = new Map()
+
+    }
+    shallowCopy() {
+        const newIns = new Inspections()
+        newIns.inspections = this.inspections
+        newIns.idIndex = this.idIndex
+        return newIns
     }
     private static _offset(inspections: Inspection[], diffs: Diff[]) {
         for (const ins of inspections) {
@@ -112,16 +117,17 @@ class Inspections {
         const diffs = revisionsData.getDiffs(inspection.rev)
 
         Inspections._offset([inspection], diffs)
-        
+
         const newInspections = [inspection].concat(this.inspections)
         newInspections.sort((a, b) => a.start - b.start)
         this.inspections = newInspections
+        this.idIndex.set(inspection.id, inspection)
     }
     remove(id: number) { //todo o(1)
         this.inspections = this.inspections.filter(ins => ins.id !== id)
-        const idStr = id.toString()
+        this.idIndex.delete(id)
     }
-    textNodes(text: string, cursorPosition: number, cb: (id: string, text: string, isInspection?: boolean, highlighted?: boolean)=>void) {
+    textNodes(text: string, cursorPosition: number, cb: (id: string, text: string, isInspection?: boolean, highlighted?: boolean) => void) {
         let lastInsInd = 0
         for (const ins of this) {
             if (ins.start !== lastInsInd) {
@@ -129,21 +135,27 @@ class Inspections {
             }
             const highlighted = cursorPosition >= ins.start && cursorPosition <= ins.end
 
-            cb(ins.id.toString(), text.substring(ins.start, ins.end), true,   highlighted)
+            cb(ins.id.toString(), text.substring(ins.start, ins.end), true, highlighted)
             lastInsInd = ins.end;
         }
         if (lastInsInd !== text.length) {
-            cb('last',text.substring(lastInsInd))
+            cb('last', text.substring(lastInsInd))
         }
     }
     [Symbol.iterator]() {
         return this.inspections[Symbol.iterator]()
     }
+    map<T>(cb: (ins: Inspection, ind: number)=>T) {
+        return this.inspections.map(cb)
+    }
+    getById(id: number) {
+        return this.idIndex.get(id)
+    }
 
 }
 
 class InspectionProxy {
-    
+
     constructor(public inspections: Inspections, private revisionsData: RevisionsData) {
 
     }
@@ -152,8 +164,8 @@ class InspectionProxy {
         return this
     }
     remove(id: number) {
-        this.inspections.remove(id)  
-        return this        
+        this.inspections.remove(id)
+        return this
     }
 }
 
@@ -170,7 +182,7 @@ export class StateModel {
 
     modifyInspections(cb: (ins: InspectionProxy) => InspectionProxy) {
         this.state.lens('inspections').modify(inspections => {
-            const newInspections = new Inspections(inspections.inspections)
+            const newInspections = inspections.shallowCopy()
             cb(new InspectionProxy(newInspections, this.revisionsData))
             return newInspections
         })
@@ -188,7 +200,7 @@ export class StateModel {
 
         this.state.modify(state => {
             const { text, inspections } = state;
-            let newInspections = new Inspections(inspections.inspections)
+            let newInspections = inspections.shallowCopy()
             newInspections.offset([diff!])
             // validateDiff(text, newText, diff)
 
@@ -200,9 +212,9 @@ export class StateModel {
     }
     setCurPos(newPos: number) {
         this.state.modify(state => {
-            return Object.assign({}, state, {'cursorPosition': newPos})
+            return Object.assign({}, state, { 'cursorPosition': newPos })
         })
     }
-    
+
 }
 
