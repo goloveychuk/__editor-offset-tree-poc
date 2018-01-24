@@ -34,7 +34,6 @@ const css = {
         "box-sizing": "border-box",
         "border-color": "transparent",
         "border-style": "solid",
-        color: "transparent",
         position: "absolute",
         "white-space": "pre-wrap",
         "word-wrap": "break-word",

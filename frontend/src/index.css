@@ -27,20 +27,23 @@ body {
  
 
 .textNodesContainer > span {
-  border-bottom: 4px solid red;
-  
+  // border-bottom: 4px solid red;
+  color: black !important;
+  // background: #fcaeae;  
 }
 
-.textNodesContainer > span.highlighted {
-  background: #fcaeae;
-  transition: background 0.3s ease;
+.textNodesContainer > span.inspection {
+  // background: #fcaeae;
+  border-bottom: 4px solid red;
+  // 
+  // transition: background 0.3s ease;
 }
 
 
 textarea {
   line-height: 1.6em;
   font-size: 1.5em;
-  height: 50000px;
+  height: 100px;
   width: 1000px !important;
   overflow: hidden;
   background-color: transparent;
@@ -51,4 +54,14 @@ textarea {
 
 .appContainer {
   display: flex;
+  flex-direction: column;
+}
+
+
+.tree-container {
+  display: flex;
+}
+
+.tree-debug {
+  width: 10em;
 }

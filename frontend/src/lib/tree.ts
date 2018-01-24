@@ -4,10 +4,10 @@ export class Nodee<T> {
     left?: Nodee<T>
     right?: Nodee<T>
     parent?: Nodee<T>
-    data?: T
+    data: T
     height = 0
     offset: number
-    constructor(offset: number, data?: T) {
+    constructor(offset: number, data: T) {
         this.offset = offset
         this.data = data
     }
@@ -112,25 +112,103 @@ export class Nodee<T> {
         return Math.max(leftH, rightH) + 1
     }
 
-    remove() {
-        // todo impl
+    // remove() {
+    //     // todo impl
+    // }
+
+    // getRoot() {
+    //     let root: Nodee<T> = this
+    //     while (root.parent !== undefined) {
+    //         root = root.parent
+    //     }
+    //     return root
+    // }
+    getLeft() {
+        if (this.left !== undefined) {
+            return this.left
+        }
+        let p: Nodee<T> = this;
+        while (p.parent !== undefined) {
+            if (p.parent.right === p) {
+                return p.parent
+            }
+            p = p.parent
+        }        
+        return undefined
     }
+    
+    getRight() {
+        if (this.right !== undefined) {
+            return this.right
+        }
+        let p: Nodee<T> = this;
+        while (p.parent !== undefined) {
+            if (p.parent.left === p) {
+                return p.parent
+            }
+            p = p.parent
+        }        
+        return undefined
+    }
+    
 
 }
 
 
-export class Tree<T> {
-    root?: Nodee<T>
-    id = 1
+class ModifyNodeProxy<T> {
+    constructor(readonly node: Nodee<T>, readonly start: number, readonly end: number) { }
+}
 
+
+export class Tree<T> {
+    root: Nodee<T>
+    id = 1
+    shallowCopy() {
+        let tr = new Tree<T>(this.root)
+        tr.id = this.id + 1
+        return tr
+    }
+    constructor(root: Nodee<T>) {
+        this.root = root
+    }
     insert(start: number, end: number, data: T) {
         this.root = this._insert(this.root, start, data)
-        this.root = this._insert(this.root, end)
+        // this.root = this._insert(this.root, end)
+    }
+    insertRightForNode(node: Nodee<T>, insert: Nodee<T>) { //insert shoudn't not have children
+        if (node.right !== undefined) {
+            // 
+            node.right.parent = insert
+            const offset = node.right.offset - insert.offset
+            if (offset > 0) {
+                insert.right = node.right
+            } else {
+                insert.left = node.right
+            }
+            node.right.offset = offset
+            //todo mb rebalance
+        }
+        node.right = insert
+        insert.parent = node
+
+        let root: Nodee<T> = node
+
+        root.height = Math.max(root.leftHeight(), root.rightHeight()) + 1;
+        
+        while (root.parent !== undefined) {
+            root = root.parent
+            root.height = Math.max(root.leftHeight(), root.rightHeight()) + 1;
+        }
+
+        this.root = root.balance()
+    }
+    removeNode(node: Nodee<T>) {
+
     }
 
-    _testInsert(ind: number, data: T) {
-        this.root = this._insert(this.root, ind, data)
-    }
+    // _testInsert(ind: number, data: T) {
+    //     this.root = this._insert(this.root, ind, data)
+    // }
     _testIsBalanced(node: Nodee<T> | undefined): boolean {
         if (node === undefined) {
             return true
@@ -146,7 +224,7 @@ export class Tree<T> {
     //     }
     //     return this.root._testComputeHeight()
     // }
-    _insert(root: Nodee<T> | undefined, offset: number, data?: T): Nodee<T> {
+    _insert(root: Nodee<T> | undefined, offset: number, data: T): Nodee<T> {
 
 
         if (root === undefined) {
@@ -169,30 +247,41 @@ export class Tree<T> {
         return root.balance()
         // return root
     }
-    find(start: number) {
-        let ind = start;
+    _find(index: number) {
+        let ind = index;
         let p = this.root;
         // let lastP = p;
         while (p !== undefined) {
             if (p.offset === ind) {
-                return p
+                break
             }
             if (ind > p.offset) {
                 ind -= p.offset;
                 if (p.right === undefined) {
-                    return p
+                    break
                 }
                 p = p.right
             } else if (ind < p.offset) {
-                ind -= p.offset;        
+                ind -= p.offset;
                 if (p.left === undefined) {
-                    return p
-                }        
+                    break
+                }
                 p = p.left
             }
-            
-        } 
-        return p
+
+        }
+        return {node: p, ind} //todo
+    }
+    *modify(start: number, end: number): IterableIterator<ModifyNodeProxy<T>> {
+        let {node: left, ind} = this._find(start)
+        if (left === undefined) {
+            return
+        }
+        if (ind < 0) {
+            ind = this.root.offset + ind
+        }
+        yield new ModifyNodeProxy(left, ind, end-start + ind)
+
     }
     [Symbol.iterator]() {
         function* helper(node?: Nodee<T>): IterableIterator<Nodee<T>> {

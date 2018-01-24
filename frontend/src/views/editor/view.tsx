@@ -1,13 +1,29 @@
 import * as React from 'react';
 import { Atom, ReadOnlyAtom, lift, F, Lens } from '@grammarly/focal';
-import { State, TextNode, StateModel, NodesForView } from '../../models';
+import { State, StateModel, NodesForView } from '../../models';
 import * as ClassNames from 'classnames';
 import { Observable, ObservableInput } from 'rxjs/Observable'
 import { Subscription as RxSubscription } from 'rxjs/Subscription'
 
-import { Renderer } from './renderer'
+// import { Renderer } from './renderer'
 
+class Renderer {
+    constructor(readonly container: HTMLElement, state: Atom<State>) {
+        
+        state.subscribe(st => {
+            container.innerHTML = ""
+            for (const node of st.tree) {
+                const el = document.createElement('span')
+                el.innerText = node.data.text
+                if (node.data.isInspection) {
+                    el.setAttribute('class', 'inspection')
+                }
+                container.appendChild(el)
+            }
+        })
+    }
 
+}
 
 interface Props {
     state: StateModel

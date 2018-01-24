@@ -1,4 +1,4 @@
-import {InspectionsBar} from './inspectionsBar'
+// import {InspectionsBar} from './inspectionsBar'
 import { Api, Request, Response } from '../api'
 import { Textoverlay } from './editor/overlay';
 import * as ReactDOM from 'react-dom'
@@ -7,13 +7,15 @@ import { Atom } from '@grammarly/focal';
 import { StateModel, Inspection } from '../models';
 import { TextareaView } from './editor/view';
 import { InputKeyboardEvent } from '../utils'
-
+import { TreeRenderer } from '../lib/displayTree'
 
 interface TextareaEditorProps {
     viewModel: StateModel
-    onInput(event: InputKeyboardEvent, cursorPos: number):void 
+    onInput(event: InputKeyboardEvent, cursorPos: number): void
     onCurPosChange(newPos: number): void
 }
+
+const INITIAL_TEXT = ' okay chqange shaallow'
 
 class TextareaEditor extends React.Component<TextareaEditorProps> {
     textAreaRef: HTMLTextAreaElement | null
@@ -26,9 +28,9 @@ class TextareaEditor extends React.Component<TextareaEditorProps> {
         // this.props.onInput()
         // text: node.value  //todo
     }
-    
+
     render() {
-        return <textarea placeholder="type text" ref={(ref) => {this.textAreaRef=ref}}></textarea>
+        return <textarea defaultValue={INITIAL_TEXT} placeholder="type text" ref={(ref) => { this.textAreaRef = ref }}></textarea>
     }
 }
 
@@ -51,33 +53,31 @@ export class RootView extends React.Component<{}, State> {
         this.api.connect()
 
         this.state = {
-            viewModel: new StateModel({text: ''})
+            viewModel: new StateModel({ text: INITIAL_TEXT })
         }
 
-        
+
 
     }
     processApiMessages = (responses: Response.Response[]) => {
         if (responses.length === 0) {
             return
         }
-        this.state.viewModel.modifyInspections((proxy) => {
-            for (const resp of responses) {
-                console.log(resp)
-                switch (resp.type) {
-                    case Response.Type.AddInspection:
-                        proxy.add(resp)
-                        break;
-                    case Response.Type.RemoveInspection:
-                        proxy.remove(resp.id)
-                        break;
-                    case Response.Type.Ok:
-                        this.state.viewModel.revisionsData.removeDiffs(resp.rev)
-                        break;
-                }
+        for (const resp of responses) {
+            console.log(resp)
+            switch (resp.type) {
+                case Response.Type.AddInspection:
+                    this.state.viewModel.addInspection(resp)
+                    break;
+                case Response.Type.RemoveInspection:
+                    // this.state.viewModel.removeInspection(resp.id)
+                    break;
+                case Response.Type.Ok:
+                    this.state.viewModel.revisionsData.removeDiffs(resp.rev)
+                    break;
             }
-            return proxy
-        })
+        }
+
     }
 
     onApiConnectionChange = (connected: boolean) => {
@@ -108,10 +108,12 @@ export class RootView extends React.Component<{}, State> {
 
 
     render() {
-        const {viewModel} = this.state
+        const { viewModel } = this.state
+
         return <div className='appContainer'>
-            <TextareaEditor viewModel={viewModel} onInput={this.onInput} onCurPosChange={this.onCurPosChange}/>
-            <InspectionsBar viewModel={viewModel}/>
+            <TextareaEditor viewModel={viewModel} onInput={this.onInput} onCurPosChange={this.onCurPosChange} />
+            <TreeRenderer tree={viewModel.state.lens('tree')} />
+            {/* <InspectionsBar viewModel={viewModel}/> */}
         </div>
     }
 }

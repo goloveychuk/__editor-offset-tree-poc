@@ -1,11 +1,11 @@
 import * as d3 from 'd3';
 import * as React from 'react';
 import { Tree, Nodee } from './tree'
-import { TextNode } from '../models';
+import { TextNodeData } from '../models';
 import {Atom, F, lift} from '@grammarly/focal'
 
 interface Data {
-    data?: TextNode
+    data?: TextNodeData
     offset: number
     _testComputeIndex(): number
 }
@@ -18,7 +18,7 @@ function formatOffset(offset: number) {
 }
 
 // set the dimensions and margins of the diagram
-var margin = { top: 40, right: 10, bottom: 50, left: 90 },
+var margin = { top: 50, right: 10, bottom: 50, left: 90 },
     width = 1560 - margin.left - margin.right,
     height = 500 - margin.top - margin.bottom;
 
@@ -73,7 +73,11 @@ function renderTree(containerSelector: string, treeData: Nodee<any>) {
 
     // adds the circle to the node
     node.append("circle")
-        .attr("r", 40);
+        .attr("r", 50)
+        .style("fill", d=>{
+            return d.data.data!.isInspection ? 'rgb(251, 222, 222)': null
+        })
+        
 
     // adds the text to the node
     node.append("text")
@@ -83,7 +87,7 @@ function renderTree(containerSelector: string, treeData: Nodee<any>) {
         .style("text-anchor", "middle")
         .text(function (d) {
             const data = d.data;
-            return `${data.data && data.data.text}  ${formatOffset(data.offset)}`
+            return `"${data.data && data.data.text}"  ${formatOffset(data.offset)}`
         })
     node.append('text')
         .style("text-anchor", "middle")
@@ -99,9 +103,24 @@ function renderTree(containerSelector: string, treeData: Nodee<any>) {
 
 
 interface Props {
-    tree: Atom<Tree<any>>
+    tree: Atom<Tree<TextNodeData>>
 }
 
+function makeIndexesText(tree: Tree<TextNodeData>) {
+    let res: React.ReactChild[] = []
+    let indShould = 0
+
+    for (const node of tree) {
+        const ind = node._testComputeIndex()
+        let wrong = (ind !== indShould) ? '!!!!!!!!!!!!!!!!!!!!!!!' : ''
+        
+        res.push(`(${ind}, ${ind+node.data.text.length}) - "${node.data.text}"`)
+
+        indShould = ind+node.data.text.length
+        res.push(<br/>)
+    }
+    return res
+}
 
 export class TreeRenderer extends React.Component<Props> {
     componentDidMount() {
@@ -117,8 +136,12 @@ export class TreeRenderer extends React.Component<Props> {
     render() {
         const { tree } = this.props;
 
-        return <div>
+        return <div className='tree-container'>
+            <div className='tree-debug'>
             is balanced: <F.span>{tree.view(tree => String(tree._testIsBalanced(tree.root)))}</F.span>
+            <br/>
+            <F.span>{tree.view(tree=> makeIndexesText(tree))}</F.span>
+            </div>
             <div id='tree' />
         </div>
     }
