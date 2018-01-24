@@ -15,7 +15,7 @@ interface TextareaEditorProps {
     onCurPosChange(newPos: number): void
 }
 
-const INITIAL_TEXT = ' okay chqange shaallow'
+const INITIAL_TEXT = ' okasy chqange shaallow'
 
 class TextareaEditor extends React.Component<TextareaEditorProps> {
     textAreaRef: HTMLTextAreaElement | null
