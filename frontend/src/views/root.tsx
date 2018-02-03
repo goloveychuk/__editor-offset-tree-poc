@@ -15,7 +15,10 @@ interface TextareaEditorProps {
     onCurPosChange(newPos: number): void
 }
 
-const INITIAL_TEXT = ' okasy chqange shaallow'
+// const INITIAL_TEXT = 'some verqy long seqquency, ok maybe noott that longn'
+// const INITIAL_TEXT = 'some verqy veerre hello okaass think diffreent hereeq long seqquency, ok maybe noott that longn'
+const INITIAL_TEXT = 'some verqy veerre hello okaass isas her ohllol think diffreent hereeq long seqquency, ok maybe noott that longn'
+
 
 class TextareaEditor extends React.Component<TextareaEditorProps> {
     textAreaRef: HTMLTextAreaElement | null
@@ -41,7 +44,7 @@ interface State {
 
 export class RootView extends React.Component<{}, State> {
     api: Api
-
+    disableApi = false
     constructor(props: {}) {
         // this.node.onchange = this.onChange
         super(props)
@@ -55,12 +58,15 @@ export class RootView extends React.Component<{}, State> {
         this.state = {
             viewModel: new StateModel({ text: INITIAL_TEXT })
         }
-
+        setTimeout(()=>{this.disableApi = true}, 1000)
 
 
     }
     processApiMessages = (responses: Response.Response[]) => {
         if (responses.length === 0) {
+            return
+        }
+        if (this.disableApi) {
             return
         }
         for (const resp of responses) {

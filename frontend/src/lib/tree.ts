@@ -212,9 +212,9 @@ export class Tree<T> {
         }
 
         if (balancedNode !== node) {
-            if (balancedNode.parent.left === node) {
+            if (balancedNode.offset < 0) {
                 balancedNode.parent.left = balancedNode
-            } else if (balancedNode.parent.right === node) {
+            } else if (balancedNode.offset > 0) {
                 balancedNode.parent.right = balancedNode
             } else {
                 throw new Error('wtf')                
@@ -269,26 +269,27 @@ export class Tree<T> {
         // return root
     }
     _find(index: number) {
-        let ind = index;
+        let ind = index
         let lastRight = this.root;
         let p = this.root;
         // let lastP = p;
         while (p !== undefined) {
-            if (p.offset === ind) {
+            ind -= p.offset
+            if (ind === 0) {
                 break
             }
-            if (ind > p.offset) {
+            if (ind > 0) {
                 if (p.right === undefined) {
                     break
                 }
+                // if (ind < p.right.offset) { //todo
+                //     break
+                // }
                 p = p.right
-                ind -= p.offset;
-            } else if (ind < p.offset) {
-                // if 
+            } else if (ind < 0) {
                 if (p.left === undefined) {
                     break
                 }
-                ind -= p.offset;                
                 p = p.left
             }
 
@@ -296,11 +297,11 @@ export class Tree<T> {
         return { node: p, ind, lastRight } //todo
     }
     *modify(start: number, end: number): IterableIterator<ModifyNodeProxy<T>> {
-        let { node, ind, lastRight } = this._find(start)
+        let { node, lastRight } = this._find(start)
         if (node === undefined) {
             return
         }
-        ind = start - node._testComputeIndex()  //todo!!!
+        const ind = start - node._testComputeIndex()  //todo!!!
         yield {
             node, start: ind, end: end - start + ind,
             // lastRight

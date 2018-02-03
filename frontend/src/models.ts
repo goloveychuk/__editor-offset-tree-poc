@@ -285,12 +285,26 @@ export class StateModel {
                 // if (data.text.length === 0) {
 
                 // }
-                const right = node.getRight()
-                if (right !== undefined) {
-                    const offsetDiff = rep.length - (end - start)
-                    right.offset += offsetDiff
-                    node.offset -= offsetDiff
+
+                const offsetDiff = rep.length - (end - start)
+                tree.root.offset += offsetDiff
+
+                //1
+                // node.offset -= offsetDiff
+
+                //2
+                if (node.right) {
+                    node.right.offset += offsetDiff
                 }
+                
+                if (node.offset < 0) {
+                    node.offset -= offsetDiff
+                } else {
+                    if (node.parent) {
+                        node.parent.offset -= offsetDiff
+                    }
+                }
+                
             }
 
             return Object.assign({}, state, { text: newText, tree: tree.shallowCopy() })
