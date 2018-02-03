@@ -112,9 +112,9 @@ function makeIndexesText(tree: Tree<TextNodeData>) {
 
     for (const node of tree) {
         const ind = node._testComputeIndex()
-        let wrong = (ind !== indShould) ? '!!!!!!!!!!!!!!!!!!!!!!!' : ''
+        let wrong = (ind !== indShould) ? '- Wrong!' : ''
         
-        res.push(`(${ind}, ${ind+node.data.text.length}) - "${node.data.text}"`)
+        res.push(`(${ind}, ${ind+node.data.text.length}) - "${node.data.text}" ${wrong}`)
 
         indShould = ind+node.data.text.length
         res.push(<br/>)

@@ -156,7 +156,11 @@ export class Nodee<T> {
 
 
 class ModifyNodeProxy<T> {
-    constructor(readonly node: Nodee<T>, readonly start: number, readonly end: number) { }
+    
+    node: Nodee<T>
+     start: number
+     end: number
+
 }
 
 
@@ -266,6 +270,7 @@ export class Tree<T> {
     }
     _find(index: number) {
         let ind = index;
+        let lastRight = this.root;
         let p = this.root;
         // let lastP = p;
         while (p !== undefined) {
@@ -273,31 +278,33 @@ export class Tree<T> {
                 break
             }
             if (ind > p.offset) {
-                ind -= p.offset;
                 if (p.right === undefined) {
                     break
                 }
                 p = p.right
-            } else if (ind < p.offset) {
                 ind -= p.offset;
+            } else if (ind < p.offset) {
+                // if 
                 if (p.left === undefined) {
                     break
                 }
+                ind -= p.offset;                
                 p = p.left
             }
 
         }
-        return { node: p, ind } //todo
+        return { node: p, ind, lastRight } //todo
     }
     *modify(start: number, end: number): IterableIterator<ModifyNodeProxy<T>> {
-        let { node: left, ind } = this._find(start)
-        if (left === undefined) {
+        let { node, ind, lastRight } = this._find(start)
+        if (node === undefined) {
             return
         }
-        if (ind < 0) {
-            ind = this.root.offset + ind
+        ind = start - node._testComputeIndex()  //todo!!!
+        yield {
+            node, start: ind, end: end - start + ind,
+            // lastRight
         }
-        yield new ModifyNodeProxy(left, ind, end - start + ind)
 
     }
     [Symbol.iterator]() {

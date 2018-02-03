@@ -276,10 +276,15 @@ export class StateModel {
             // newInspections.offset([diff!])
             // // validateDiff(text, newText, diff)
             for (const { node, start, end } of tree.modify(diff!.start, diff!.end)) {
+                console.log(node, start, end)
                 const data = node.data;
                 // const rep = diff!.text.slice(proxy.start, proxy.end)
                 const rep = diff!.text
                 data.text = replaceRange(data.text, start, end, rep)
+                console.log(data)
+                // if (data.text.length === 0) {
+
+                // }
                 const right = node.getRight()
                 if (right !== undefined) {
                     const offsetDiff = rep.length - (end - start)
