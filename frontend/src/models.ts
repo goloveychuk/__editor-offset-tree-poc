@@ -1,12 +1,12 @@
 import { Atom } from '@grammarly/focal'
 
-import { getDiff, validateDiff, Diff, InputKeyboardEvent, replaceRange } from '../utils'
+import { getDiff, validateDiff, Diff, InputKeyboardEvent, replaceRange } from './utils'
 import { ReadOnlyAtom } from '@grammarly/focal/dist/src/atom/base';
 import { inspect } from 'util';
 import { retry } from 'rxjs/operators/retry';
-import { OrderedMap } from '../structs'
+import { OrderedMap } from './structs'
 import { Observable, ObservableInput } from 'rxjs/Observable'
-import { Tree, Nodee } from '../lib/tree'
+import { Tree, Nodee } from './lib/tree'
 
 export enum InspectionType {
     UnknownWord = 'unknown_word'
