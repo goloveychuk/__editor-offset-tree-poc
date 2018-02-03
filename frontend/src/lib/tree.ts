@@ -1,6 +1,8 @@
+interface NodeRepresentable {
+    text: string
+}
 
-
-export class Nodee<T> {
+export class Nodee<T extends NodeRepresentable> {
     left?: Nodee<T>
     right?: Nodee<T>
     parent?: Nodee<T>
@@ -155,7 +157,7 @@ export class Nodee<T> {
 }
 
 
-class ModifyNodeProxy<T> {
+class ModifyNodeProxy<T extends NodeRepresentable> {
     
     node: Nodee<T>
      start: number
@@ -164,7 +166,7 @@ class ModifyNodeProxy<T> {
 }
 
 
-export class Tree<T> {
+export class Tree<T extends NodeRepresentable> {
     root: Nodee<T>
     id = 1
     shallowCopy() {
@@ -282,9 +284,9 @@ export class Tree<T> {
                 if (p.right === undefined) {
                     break
                 }
-                // if (ind < p.right.offset) { //todo
-                //     break
-                // }
+                if (ind < p.data.text.length) { //todo
+                    break
+                }
                 p = p.right
             } else if (ind < 0) {
                 if (p.left === undefined) {

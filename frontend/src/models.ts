@@ -215,7 +215,7 @@ export class StateModel {
             }
 
             let inspectionNode: Nodee<TextNodeData>
-            
+
             data.text = data.text.slice(0, start) //todo offsets
 
             if (data.text.length !== 0) {
@@ -287,24 +287,36 @@ export class StateModel {
                 // }
 
                 const offsetDiff = rep.length - (end - start)
-                tree.root.offset += offsetDiff
+                // tree.root.offset += offsetDiff
 
-                //1
-                // node.offset -= offsetDiff
-
-                //2
                 if (node.right) {
                     node.right.offset += offsetDiff
                 }
-                
+
+                let p = node
+
                 if (node.offset < 0) {
-                    node.offset -= offsetDiff
-                } else {
-                    if (node.parent) {
-                        node.parent.offset -= offsetDiff
-                    }
+                    p.offset -= offsetDiff
                 }
-                
+
+                while (true) {
+                    if (!p.parent) {
+                        break
+                    }
+
+                    if (p.offset < 0 && p.parent.offset < 0) {
+                        
+                    } else if (p.offset < 0 && p.parent.offset > 0) {
+                        p.parent.offset += offsetDiff
+                    } else if (p.offset > 0 && p.parent.offset < 0) {
+                        p.parent.offset -= offsetDiff
+                    } else if (p.offset > 0 && p.parent.offset > 0) {
+
+                    }
+
+                    p = p.parent
+                }
+
             }
 
             return Object.assign({}, state, { text: newText, tree: tree.shallowCopy() })

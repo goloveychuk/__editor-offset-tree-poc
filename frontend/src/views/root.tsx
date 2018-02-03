@@ -17,8 +17,8 @@ interface TextareaEditorProps {
 
 // const INITIAL_TEXT = 'some verqy long seqquency, ok maybe noott that longn'
 // const INITIAL_TEXT = 'some verqy veerre hello okaass think diffreent hereeq long seqquency, ok maybe noott that longn'
-const INITIAL_TEXT = 'some verqy veerre hello okaass isas her ohllol think diffreent hereeq long seqquency, ok maybe noott that longn'
-
+// const INITIAL_TEXT = 'some verqy veerre hello okaass isas her ohllol think diffreent hereeq long seqquency, ok maybe noott that longn'
+const INITIAL_TEXT = 'some verqy veerre hello okaass isas her ohllol think diffreent hereeq lsda '
 
 class TextareaEditor extends React.Component<TextareaEditorProps> {
     textAreaRef: HTMLTextAreaElement | null
