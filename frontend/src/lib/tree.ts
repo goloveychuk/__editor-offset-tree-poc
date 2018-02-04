@@ -181,11 +181,11 @@ export class Tree<T extends NodeRepresentable> {
         insert.parent = node
 
         let p: Nodee<T> | undefined = node
-        this.root = this._balanceForNode(node)
+        this.root = this._balanceUp(node)
 
     }
 
-    _balanceForNode(node: Nodee<T>): Nodee<T> {
+    _balanceUp(node: Nodee<T>): Nodee<T> {
         
         node.height = Math.max(node.leftHeight(), node.rightHeight()) + 1;
 
@@ -204,7 +204,7 @@ export class Tree<T extends NodeRepresentable> {
             }
         }
 
-        return this._balanceForNode(balancedNode.parent)
+        return this._balanceUp(balancedNode.parent)
     }
     removeNode(node: Nodee<T>) {
         if (node.leftLink) {
@@ -227,17 +227,23 @@ export class Tree<T extends NodeRepresentable> {
             } else {
                 node.parent.right = newNode
             }
-            this.root = this._balanceForNode(node) //todo check
+            this.root = this._balanceUp(node) //todo check
         } else {
             if (newNode) {
-                this.root = this._balanceForNode(newNode) //todo check
+                this.root = this._balanceUp(newNode) //todo check
             }
         }
     }
 
     _removeNode(node: Nodee<T>) {
         if (node.left && node.right) {
-            throw new Error('sdf')
+            const minNode = node.right.getMinNode()
+            
+            minNode.left = node.left
+            node.left.parent = minNode
+
+            node.right.offset += node.offset            
+            return node.right
         } else if (node.left) {
             node.left.offset += node.offset
             return node.left
