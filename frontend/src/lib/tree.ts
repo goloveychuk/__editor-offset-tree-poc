@@ -1,3 +1,6 @@
+import { replaceRange } from '../utils'
+
+
 interface NodeRepresentable {
     text: string
 }
@@ -125,7 +128,7 @@ export class Nodee<T extends NodeRepresentable> {
     _testGetHeight(): number {
         const leftH = (this.left !== undefined) ? this.left._testGetHeight() : 0
         const rightH = (this.right !== undefined) ? this.right._testGetHeight() : 0
-        return Math.max(leftH, rightH) + 1        
+        return Math.max(leftH, rightH) + 1
     }
     getLeft() {
         return this.leftLink
@@ -147,15 +150,44 @@ export class Nodee<T extends NodeRepresentable> {
     isRight() {
         return this.offset > 0
     }
+
+    offsetNode(offsetDiff: number) {
+        if (this.right) {
+            this.right.offset += offsetDiff
+        }
+
+        let p: Nodee<T> = this
+
+        if (this.isLeft()) {
+            p.offset -= offsetDiff
+        }
+
+        while (p.parent) {
+
+            if (p.isLeft() && p.parent.isRight()) {
+                p.parent.offset += offsetDiff
+            } else if (p.isRight() && p.parent.isLeft()) {
+                p.parent.offset -= offsetDiff
+            }
+
+            p = p.parent
+        }
+    }
 }
 
 
 class ModifyNodeProxy<T extends NodeRepresentable> {
-    
-    node: Nodee<T>
-     start: number
-     end: number
 
+    constructor(public node: Nodee<T>, public start: number, public end: number, public substr: string) { }
+
+    applyText() {
+        const { node, start, end, substr } = this;
+
+        node.data.text = replaceRange(node.data.text, start, end, substr)
+
+        const offsetDiff = substr.length - (end - start)
+        node.offsetNode(offsetDiff)
+    }
 }
 
 
@@ -200,7 +232,7 @@ export class Tree<T extends NodeRepresentable> {
     }
 
     _balanceUp(node: Nodee<T>): Nodee<T> {
-        
+
         node.recalcHeight()
 
         const balancedNode = node.balance()
@@ -227,15 +259,15 @@ export class Tree<T extends NodeRepresentable> {
         if (node.rightLink) {
             node.rightLink.leftLink = node.leftLink
         }
-        
-        const {newNode, toBalance} = this._removeNode(node)
-        
+
+        const { newNode, toBalance } = this._removeNode(node)
+
         if (newNode) {
             newNode.parent = node.parent
         }
 
         if (node.parent) {
-            
+
             if (node.isLeft()) {
                 node.parent.left = newNode
             } else if (node.isRight()) {
@@ -244,31 +276,31 @@ export class Tree<T extends NodeRepresentable> {
         }
         const nodeToBalance = toBalance || newNode
 
-        if (nodeToBalance) {    
+        if (nodeToBalance) {
             this.root = this._balanceUp(nodeToBalance)
         }
-        
+
     }
 
-    _removeNode(node: Nodee<T>): {newNode?: Nodee<T>, toBalance?: Nodee<T>} {
+    _removeNode(node: Nodee<T>): { newNode?: Nodee<T>, toBalance?: Nodee<T> } {
         if (node.left && node.right) {
             const minNode = node.right.getMinNode()
-            
+
             minNode.left = node.left
             node.left.parent = minNode
             // minNode.recalcHeight()
-            
+
             node.right.offset += node.offset
-            return {newNode: node.right, toBalance: minNode}
+            return { newNode: node.right, toBalance: minNode }
 
         } else if (node.left) {
             node.left.offset += node.offset
-            return {newNode: node.left}
+            return { newNode: node.left }
         } else if (node.right) {
-            node.right.offset += node.offset            
-            return {newNode: node.right}
+            node.right.offset += node.offset
+            return { newNode: node.right }
         } else {
-            return {newNode: undefined, toBalance: node.parent}
+            return { newNode: undefined, toBalance: node.parent }
         }
     }
 
@@ -281,7 +313,7 @@ export class Tree<T extends NodeRepresentable> {
         }
         return this._testIsBalanced(node.left) && this._testIsBalanced(node.right)
     }
-   
+
     _find(index: number) {
         let ind = index
         let p = this.root;
@@ -309,14 +341,34 @@ export class Tree<T extends NodeRepresentable> {
         }
         return { node: p, ind } //todo
     }
-    *modify(start: number, end: number): IterableIterator<ModifyNodeProxy<T>> {
+    findNodeByRange(start: number, end: number) {
         let { node, ind } = this._find(start)
         if (node === undefined) {
             return
         }
-        // const ind = start - node._testComputeIndex()  //todo!!!
-        yield {
+        return {
             node, start: ind, end: end - start + ind,
+        }
+    }
+    *findByRange(findStart: number, findEnd: number, text: string): IterableIterator<ModifyNodeProxy<T>> {
+        let { node: startNode, ind } = this._find(findStart)
+        
+
+        let node: Nodee<T> | undefined = startNode
+        let start = ind
+        let left = findEnd - findStart
+
+        let sub = text
+        while (node && left >= 0) {
+            let end = Math.min(left+start, node.data.text.length)
+            // subEnd += end
+            
+            yield new ModifyNodeProxy(node, start, end, sub)
+            left -= (end - start)
+            sub = ''
+            start = 0
+            node = node.rightLink
+
         }
     }
 
@@ -336,7 +388,7 @@ export class Tree<T extends NodeRepresentable> {
         return helper(this.root)
     }
     *[Symbol.iterator](): IterableIterator<Nodee<T>> {
-        let p : Nodee<T> | undefined = this.root.getMinNode()
+        let p: Nodee<T> | undefined = this.root.getMinNode()
 
         while (p) {
             yield p

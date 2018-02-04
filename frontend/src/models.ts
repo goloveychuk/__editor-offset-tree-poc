@@ -194,11 +194,11 @@ export class StateModel {
 
     addInspection(ins: Inspection) {
         this.state.modify(state => {
-            const nodes = Array.from(state.tree.modify(ins.start, ins.end))
-            if (nodes.length !== 1) {
-                throw new Error('smth wrong')
+            const res = state.tree.findNodeByRange(ins.start, ins.end)
+            if (res === undefined) {
+                throw new Error('cant find')
             }
-            const { node, start, end } = nodes[0]
+            const { node, start, end } = res
             const { data } = node;
 
             if (data.isInspection) {
@@ -274,38 +274,14 @@ export class StateModel {
             // let newInspections = inspections.shallowCopy()
             // newInspections.offset([diff!])
             // // validateDiff(text, newText, diff)
-            for (const { node, start, end } of tree.modify(diff!.start, diff!.end)) {
-                console.log(node, start, end)
-                const data = node.data;
-                // const rep = diff!.text.slice(proxy.start, proxy.end)
-                const rep = diff!.text
-                data.text = replaceRange(data.text, start, end, rep)             
-                console.log(data)
-                
+            diff = diff!
 
-                const offsetDiff = rep.length - (end - start)
-                // tree.root.offset += offsetDiff
+            for (const proxy of tree.findByRange(diff.start, diff.end, diff.text)) {
+             
 
-                if (node.right) {
-                    node.right.offset += offsetDiff
-                }
+                const {node} = proxy
+                proxy.applyText()
 
-                let p = node
-
-                if (node.isLeft()) {
-                    p.offset -= offsetDiff
-                }
-
-                while (p.parent) {
-
-                    if (p.isLeft() && p.parent.isRight()) {
-                        p.parent.offset += offsetDiff
-                    } else if (p.isRight() && p.parent.isLeft()) {
-                        p.parent.offset -= offsetDiff
-                    }
-
-                    p = p.parent
-                }
                 if (node.data.text.length === 0) {
                     tree.removeNode(node)
                 }

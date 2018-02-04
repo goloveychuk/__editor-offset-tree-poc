@@ -21,6 +21,9 @@ const INITIAL_TEXT = 'some verqy veerre hello okaass isas her ohllol think diffr
 // const INITIAL_TEXT = 'some verqy veerre hello okaass isas her ohllol think diffreent hereeq lsda '
 // const INITIAL_TEXT = 'some ldqsdqsd'
 
+
+// todo balance bug remove from ohlol to end
+
 class TextareaEditor extends React.Component<TextareaEditorProps> {
     textAreaRef: HTMLTextAreaElement | null
     componentDidMount() {
