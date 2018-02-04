@@ -292,7 +292,7 @@ export class StateModel {
 
                 let p = node
 
-                if (node.offset < 0) {
+                if (node.isLeft()) {
                     p.offset -= offsetDiff
                 }
 

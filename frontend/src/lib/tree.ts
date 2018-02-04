@@ -175,13 +175,12 @@ export class Tree<T extends NodeRepresentable> {
         if (node.right !== undefined) {
             // 
             node.right.parent = insert
-            const offset = node.right.offset - insert.offset
-            if (offset > 0) {
+            node.right.offset -= insert.offset
+            if (node.isRight()) {
                 insert.right = node.right
-            } else {
+            } else if (node.isLeft()) {
                 insert.left = node.right
             }
-            node.right.offset = offset
             //todo mb rebalance
         }
         if (node.rightLink) {
