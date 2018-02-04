@@ -113,18 +113,6 @@ export class Nodee<T extends NodeRepresentable> {
         }
         return Math.max(leftH, rightH) + 1
     }
-
-    // remove() {
-    //     // todo impl
-    // }
-
-    // getRoot() {
-    //     let root: Nodee<T> = this
-    //     while (root.parent !== undefined) {
-    //         root = root.parent
-    //     }
-    //     return root
-    // }
     getLeft() {
         if (this.left !== undefined) {
             return this.left
@@ -177,10 +165,7 @@ export class Tree<T extends NodeRepresentable> {
     constructor(root: Nodee<T>) {
         this.root = root
     }
-    insert(start: number, end: number, data: T) {
-        this.root = this._insert(this.root, start, data)
-        // this.root = this._insert(this.root, end)
-    }
+
     insertRightForNode(node: Nodee<T>, insert: Nodee<T>) { //insert shoudn't not have children
         if (node.right !== undefined) {
             // 
@@ -229,9 +214,6 @@ export class Tree<T extends NodeRepresentable> {
 
     }
 
-    // _testInsert(ind: number, data: T) {
-    //     this.root = this._insert(this.root, ind, data)
-    // }
     _testIsBalanced(node: Nodee<T> | undefined): boolean {
         if (node === undefined) {
             return true
@@ -241,40 +223,11 @@ export class Tree<T extends NodeRepresentable> {
         }
         return this._testIsBalanced(node.left) && this._testIsBalanced(node.right)
     }
-    // _testComputeHeight() {
-    //     if (this.root === undefined) {
-    //         return 0
-    //     }
-    //     return this.root._testComputeHeight()
-    // }
-    _insert(root: Nodee<T> | undefined, offset: number, data: T): Nodee<T> {
-
-
-        if (root === undefined) {
-            return new Nodee(offset, data)
-        }
-
-        if (offset === root.offset) {
-            return root
-        }
-        if (offset < root.offset) {
-            root.left = this._insert(root.left, offset - root.offset, data)
-            root.left.parent = root
-        } else {
-            root.right = this._insert(root.right, offset - root.offset, data)
-            root.right.parent = root
-        }
-
-
-        root.height = Math.max(root.leftHeight(), root.rightHeight()) + 1;
-        return root.balance()
-        // return root
-    }
+   
     _find(index: number) {
         let ind = index
-        let lastRight = this.root;
         let p = this.root;
-        // let lastP = p;
+
         while (p !== undefined) {
             ind -= p.offset
             if (ind === 0) {
@@ -284,7 +237,7 @@ export class Tree<T extends NodeRepresentable> {
                 if (p.right === undefined) {
                     break
                 }
-                if (ind < p.data.text.length) { //todo
+                if (ind < p.data.text.length) {
                     break
                 }
                 p = p.right
@@ -296,17 +249,16 @@ export class Tree<T extends NodeRepresentable> {
             }
 
         }
-        return { node: p, ind, lastRight } //todo
+        return { node: p, ind } //todo
     }
     *modify(start: number, end: number): IterableIterator<ModifyNodeProxy<T>> {
-        let { node, lastRight } = this._find(start)
+        let { node, ind } = this._find(start)
         if (node === undefined) {
             return
         }
-        const ind = start - node._testComputeIndex()  //todo!!!
+        // const ind = start - node._testComputeIndex()  //todo!!!
         yield {
             node, start: ind, end: end - start + ind,
-            // lastRight
         }
 
     }
@@ -324,15 +276,6 @@ export class Tree<T extends NodeRepresentable> {
             }
         }
         return helper(this.root)
-    }
-    toArray(): T[] {
-        const res = []
-        for (const i of this) {
-            if (i.data !== undefined) {
-                res.push(i.data)
-            }
-        }
-        return res
     }
 }
 

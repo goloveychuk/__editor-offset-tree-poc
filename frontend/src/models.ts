@@ -280,11 +280,9 @@ export class StateModel {
                 const data = node.data;
                 // const rep = diff!.text.slice(proxy.start, proxy.end)
                 const rep = diff!.text
-                data.text = replaceRange(data.text, start, end, rep)
+                data.text = replaceRange(data.text, start, end, rep)             
                 console.log(data)
-                // if (data.text.length === 0) {
-
-                // }
+                
 
                 const offsetDiff = rep.length - (end - start)
                 // tree.root.offset += offsetDiff
@@ -299,22 +297,18 @@ export class StateModel {
                     p.offset -= offsetDiff
                 }
 
-                while (true) {
-                    if (!p.parent) {
-                        break
-                    }
+                while (p.parent) {
 
-                    if (p.offset < 0 && p.parent.offset < 0) {
-                        
-                    } else if (p.offset < 0 && p.parent.offset > 0) {
+                    if (p.offset < 0 && p.parent.offset > 0) {
                         p.parent.offset += offsetDiff
                     } else if (p.offset > 0 && p.parent.offset < 0) {
                         p.parent.offset -= offsetDiff
-                    } else if (p.offset > 0 && p.parent.offset > 0) {
-
                     }
 
                     p = p.parent
+                }
+                if (node.data.text.length === 0) {
+                    tree.removeNode(node)
                 }
 
             }
