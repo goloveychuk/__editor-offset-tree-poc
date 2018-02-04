@@ -8,6 +8,8 @@ interface Data {
     data?: TextNodeData
     offset: number
     _testComputeIndex(): number
+    _testGetHeight(): number
+    height: number
 }
 
 function formatOffset(offset: number) {
@@ -75,6 +77,9 @@ function renderTree(containerSelector: string, treeData: Nodee<any>) {
     node.append("circle")
         .attr("r", 50)
         .style("fill", d=>{
+            if (d.data._testGetHeight() !== d.data.height) {
+                return 'red'
+            }
             return d.data.data!.isInspection ? 'rgb(251, 222, 222)': null
         })
         
@@ -96,6 +101,13 @@ function renderTree(containerSelector: string, treeData: Nodee<any>) {
             const data = d.data;
             return `(${data._testComputeIndex()})`
         })
+    node.append('text')
+    .style("text-anchor", "middle")
+    .attr("y", function (d) { return 25 })
+    .text((d) => {
+        const data = d.data;
+        return `comp/h: ${data._testGetHeight()} - ${data.height}`
+    })
 
 
 }
@@ -154,6 +166,7 @@ export class TreeRenderer extends React.Component<Props> {
         return <div className='tree-container'>
             <div className='tree-debug'>
             is balanced: <F.span>{tree.view(tree => String(tree._testIsBalanced(tree.root)))}</F.span>
+            <br/>
             is left-right correct: <F.span>{tree.view(tree=>String(isLeftRightCorrect(tree)))}</F.span>
             <br/>
             <F.span>{tree.view(tree=> makeIndexesText(tree))}</F.span>

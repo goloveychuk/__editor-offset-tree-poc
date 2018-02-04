@@ -16,6 +16,7 @@ export class Nodee<T extends NodeRepresentable> {
     constructor(offset: number, data: T) {
         this.offset = offset
         this.data = data
+        this.height = 1
     }
     _testComputeIndex() { //for debug purposes
         var ind = this.offset
@@ -28,13 +29,13 @@ export class Nodee<T extends NodeRepresentable> {
     }
     leftHeight() {
         if (this.left === undefined) {
-            return -1
+            return 0
         }
         return this.left.height
     }
     rightHeight() {
         if (this.right === undefined) {
-            return -1
+            return 0
         }
         return this.right.height
     }
@@ -56,7 +57,7 @@ export class Nodee<T extends NodeRepresentable> {
         newRoot.parent = this.parent
         this.parent = newRoot
 
-        this.height = Math.max(this.leftHeight(), this.rightHeight()) + 1
+        this.recalcHeight();
         newRoot.height = Math.max(newRoot.rightHeight(), this.height) + 1
         return newRoot
     }
@@ -78,9 +79,12 @@ export class Nodee<T extends NodeRepresentable> {
         newRoot.parent = this.parent
         this.parent = newRoot
 
-        this.height = Math.max(this.leftHeight(), this.rightHeight()) + 1;
+        this.recalcHeight();
         newRoot.height = Math.max(newRoot.leftHeight(), this.height) + 1;
         return newRoot;
+    }
+    recalcHeight() {
+        this.height = Math.max(this.leftHeight(), this.rightHeight()) + 1;
     }
     heightDifference() {
         var heightDifference = this.leftHeight() - this.rightHeight();
@@ -117,6 +121,11 @@ export class Nodee<T extends NodeRepresentable> {
             return -1
         }
         return Math.max(leftH, rightH) + 1
+    }
+    _testGetHeight(): number {
+        const leftH = (this.left !== undefined) ? this.left._testGetHeight() : 0
+        const rightH = (this.right !== undefined) ? this.right._testGetHeight() : 0
+        return Math.max(leftH, rightH) + 1        
     }
     getLeft() {
         return this.leftLink
@@ -181,13 +190,13 @@ export class Tree<T extends NodeRepresentable> {
         insert.parent = node
 
         let p: Nodee<T> | undefined = node
-        this.root = this._balanceUp(node)
+        this.root = this._balanceUp(insert)
 
     }
 
     _balanceUp(node: Nodee<T>): Nodee<T> {
         
-        node.height = Math.max(node.leftHeight(), node.rightHeight()) + 1;
+        node.recalcHeight()
 
         const balancedNode = node.balance()
 
@@ -241,8 +250,9 @@ export class Tree<T extends NodeRepresentable> {
             
             minNode.left = node.left
             node.left.parent = minNode
-
-            node.right.offset += node.offset            
+            minNode.recalcHeight()
+            
+            node.right.offset += node.offset
             return node.right
         } else if (node.left) {
             node.left.offset += node.offset
