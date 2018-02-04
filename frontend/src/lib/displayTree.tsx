@@ -122,6 +122,21 @@ function makeIndexesText(tree: Tree<TextNodeData>) {
     return res
 }
 
+function isLeftRightCorrect(tree: Tree<TextNodeData>) {
+    const leftRight = Array.from(tree)
+    const traverse = Array.from(tree._testTraverse())
+
+    if (leftRight.length !== traverse.length) {
+        return false
+    }
+    for (const i in leftRight) {
+        if (leftRight[i] !== traverse[i]){
+            return false
+        }
+    }
+    return true
+}
+
 export class TreeRenderer extends React.Component<Props> {
     componentDidMount() {
         const {tree} = this.props
@@ -139,6 +154,7 @@ export class TreeRenderer extends React.Component<Props> {
         return <div className='tree-container'>
             <div className='tree-debug'>
             is balanced: <F.span>{tree.view(tree => String(tree._testIsBalanced(tree.root)))}</F.span>
+            is left-right correct: <F.span>{tree.view(tree=>String(isLeftRightCorrect(tree)))}</F.span>
             <br/>
             <F.span>{tree.view(tree=> makeIndexesText(tree))}</F.span>
             </div>

@@ -5,6 +5,10 @@ interface NodeRepresentable {
 export class Nodee<T extends NodeRepresentable> {
     left?: Nodee<T>
     right?: Nodee<T>
+
+    leftLink?: Nodee<T>
+    rightLink?: Nodee<T>
+
     parent?: Nodee<T>
     data: T
     height = 0
@@ -114,31 +118,11 @@ export class Nodee<T extends NodeRepresentable> {
         return Math.max(leftH, rightH) + 1
     }
     getLeft() {
-        if (this.left !== undefined) {
-            return this.left
-        }
-        let p: Nodee<T> = this;
-        while (p.parent !== undefined) {
-            if (p.parent.right === p) {
-                return p.parent
-            }
-            p = p.parent
-        }
-        return undefined
+        return this.leftLink
     }
 
     getRight() {
-        if (this.right !== undefined) {
-            return this.right
-        }
-        let p: Nodee<T> = this;
-        while (p.parent !== undefined) {
-            if (p.parent.left === p) {
-                return p.parent
-            }
-            p = p.parent
-        }
-        return undefined
+        return this.rightLink
     }
 
 
@@ -166,7 +150,7 @@ export class Tree<T extends NodeRepresentable> {
         this.root = root
     }
 
-    insertRightForNode(node: Nodee<T>, insert: Nodee<T>) { //insert shoudn't not have children
+    insertRightForNode(node: Nodee<T>, insert: Nodee<T>) { //insert should be empty
         if (node.right !== undefined) {
             // 
             node.right.parent = insert
@@ -179,15 +163,23 @@ export class Tree<T extends NodeRepresentable> {
             node.right.offset = offset
             //todo mb rebalance
         }
+        if (node.rightLink) {
+            node.rightLink.leftLink = insert
+            insert.rightLink = node.rightLink
+        }
+
+        node.rightLink = insert
+        insert.leftLink = node
+
         node.right = insert
         insert.parent = node
 
         let p: Nodee<T> | undefined = node
-        this.root = this._insertForNode(node)
+        this.root = this._insertRightForNode(node)
 
     }
 
-    _insertForNode(node: Nodee<T>): Nodee<T> {
+    _insertRightForNode(node: Nodee<T>): Nodee<T> {
 
         node.height = Math.max(node.leftHeight(), node.rightHeight()) + 1;
 
@@ -208,7 +200,7 @@ export class Tree<T extends NodeRepresentable> {
             }
         }
 
-        return this._insertForNode(balancedNode.parent)
+        return this._insertRightForNode(balancedNode.parent)
     }
     removeNode(node: Nodee<T>) {
 
@@ -262,7 +254,7 @@ export class Tree<T extends NodeRepresentable> {
         }
 
     }
-    [Symbol.iterator]() {
+    _testTraverse() {
         function* helper(node?: Nodee<T>): IterableIterator<Nodee<T>> {
             if (node === undefined) {
                 return
@@ -276,6 +268,16 @@ export class Tree<T extends NodeRepresentable> {
             }
         }
         return helper(this.root)
+    }
+    *[Symbol.iterator](): IterableIterator<Nodee<T>> {
+        let p: Nodee<T> | undefined = this.root 
+        while (p.left) {
+            p = p.left
+        }
+        while (p) {
+            yield p
+            p = p.rightLink
+        }
     }
 }
 
