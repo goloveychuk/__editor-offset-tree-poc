@@ -299,10 +299,12 @@ export class StateModel {
 
                 while (p.parent) {
 
-                    if (p.offset < 0 && p.parent.offset > 0) {
+                    if (p.offset <= 0 && p.parent.offset > 0) {
                         p.parent.offset += offsetDiff
-                    } else if (p.offset > 0 && p.parent.offset < 0) {
-                        p.parent.offset -= offsetDiff
+                    } else if (p.offset > 0 && p.parent.offset <= 0) {
+                        if (p.parent.parent) { //check if root
+                            p.parent.offset -= offsetDiff
+                        }
                     }
 
                     p = p.parent

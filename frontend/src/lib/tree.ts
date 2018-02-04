@@ -62,6 +62,7 @@ export class Nodee<T extends NodeRepresentable> {
     }
     rotateRight() {
         var newRoot = this.left!;
+
         this.left = newRoot.right;
         newRoot.right = this;
 
@@ -124,8 +125,13 @@ export class Nodee<T extends NodeRepresentable> {
     getRight() {
         return this.rightLink
     }
-
-
+    getMinNode() {
+        let node: Nodee<T> = this;
+        while (node.left) {
+            node = node.left
+        }
+        return node
+    }
 }
 
 
@@ -175,12 +181,12 @@ export class Tree<T extends NodeRepresentable> {
         insert.parent = node
 
         let p: Nodee<T> | undefined = node
-        this.root = this._insertRightForNode(node)
+        this.root = this._balanceForNode(node)
 
     }
 
-    _insertRightForNode(node: Nodee<T>): Nodee<T> {
-
+    _balanceForNode(node: Nodee<T>): Nodee<T> {
+        
         node.height = Math.max(node.leftHeight(), node.rightHeight()) + 1;
 
         const balancedNode = node.balance()
@@ -191,19 +197,56 @@ export class Tree<T extends NodeRepresentable> {
         }
 
         if (balancedNode !== node) {
-            if (balancedNode.offset < 0) {
+            if (balancedNode.offset <= 0) {
                 balancedNode.parent.left = balancedNode
             } else if (balancedNode.offset > 0) {
                 balancedNode.parent.right = balancedNode
-            } else {
-                throw new Error('wtf')                
             }
         }
 
-        return this._insertRightForNode(balancedNode.parent)
+        return this._balanceForNode(balancedNode.parent)
     }
     removeNode(node: Nodee<T>) {
+        if (node.leftLink) {
+            node.leftLink.rightLink = node.rightLink
+        }
+        if (node.rightLink) {
+            node.rightLink.leftLink = node.leftLink
+        }
+        
+        const newNode = this._removeNode(node)
+        
+        if (newNode) {
+            newNode.parent = node.parent
+        }
 
+        if (node.parent) {
+            
+            if (node.offset <= 0) {
+                node.parent.left = newNode
+            } else {
+                node.parent.right = newNode
+            }
+            this.root = this._balanceForNode(node) //todo check
+        } else {
+            if (newNode) {
+                this.root = this._balanceForNode(newNode) //todo check
+            }
+        }
+    }
+
+    _removeNode(node: Nodee<T>) {
+        if (node.left && node.right) {
+            throw new Error('sdf')
+        } else if (node.left) {
+            node.left.offset += node.offset
+            return node.left
+        } else if (node.right) {
+            node.right.offset += node.offset            
+            return node.right
+        } else {
+            return undefined
+        }
     }
 
     _testIsBalanced(node: Nodee<T> | undefined): boolean {
@@ -252,8 +295,8 @@ export class Tree<T extends NodeRepresentable> {
         yield {
             node, start: ind, end: end - start + ind,
         }
-
     }
+
     _testTraverse() {
         function* helper(node?: Nodee<T>): IterableIterator<Nodee<T>> {
             if (node === undefined) {
@@ -270,10 +313,8 @@ export class Tree<T extends NodeRepresentable> {
         return helper(this.root)
     }
     *[Symbol.iterator](): IterableIterator<Nodee<T>> {
-        let p: Nodee<T> | undefined = this.root 
-        while (p.left) {
-            p = p.left
-        }
+        let p : Nodee<T> | undefined = this.root.getMinNode()
+
         while (p) {
             yield p
             p = p.rightLink
