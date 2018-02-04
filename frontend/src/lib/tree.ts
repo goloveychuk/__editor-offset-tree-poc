@@ -92,7 +92,7 @@ export class Nodee<T extends NodeRepresentable> {
     }
     balance(): Nodee<T> {
         const heightDifference = this.heightDifference();
-        if (heightDifference === 2) {
+        if (heightDifference >= 2) {
             if (this.left!.heightDifference() < 0) {
                 console.log('right left rotate')
                 this.left = this.left!.rotateLeft()
@@ -102,7 +102,7 @@ export class Nodee<T extends NodeRepresentable> {
                 return this.rotateRight()
             }
 
-        } else if (heightDifference === -2) {
+        } else if (heightDifference <= -2) {
             if (this.right!.heightDifference() > 0) {
                 console.log('left right rotate')
                 this.right = this.right!.rotateRight()
@@ -140,6 +140,12 @@ export class Nodee<T extends NodeRepresentable> {
             node = node.left
         }
         return node
+    }
+    isLeft() {
+        return this.offset <= 0 && this.parent
+    }
+    isRight() {
+        return this.offset > 0
     }
 }
 
@@ -206,9 +212,9 @@ export class Tree<T extends NodeRepresentable> {
         }
 
         if (balancedNode !== node) {
-            if (balancedNode.offset <= 0) {
+            if (balancedNode.isLeft()) {
                 balancedNode.parent.left = balancedNode
-            } else if (balancedNode.offset > 0) {
+            } else if (balancedNode.isRight()) {
                 balancedNode.parent.right = balancedNode
             }
         }
@@ -223,7 +229,7 @@ export class Tree<T extends NodeRepresentable> {
             node.rightLink.leftLink = node.leftLink
         }
         
-        const newNode = this._removeNode(node)
+        const {newNode, toBalance} = this._removeNode(node)
         
         if (newNode) {
             newNode.parent = node.parent
@@ -231,37 +237,39 @@ export class Tree<T extends NodeRepresentable> {
 
         if (node.parent) {
             
-            if (node.offset <= 0) {
+            if (node.isLeft()) {
                 node.parent.left = newNode
-            } else {
+            } else if (node.isRight()) {
                 node.parent.right = newNode
             }
-            this.root = this._balanceUp(node) //todo check
-        } else {
-            if (newNode) {
-                this.root = this._balanceUp(newNode) //todo check
-            }
         }
+        const nodeToBalance = toBalance || newNode
+
+        if (nodeToBalance) {    
+            this.root = this._balanceUp(nodeToBalance)
+        }
+        
     }
 
-    _removeNode(node: Nodee<T>) {
+    _removeNode(node: Nodee<T>): {newNode?: Nodee<T>, toBalance?: Nodee<T>} {
         if (node.left && node.right) {
             const minNode = node.right.getMinNode()
             
             minNode.left = node.left
             node.left.parent = minNode
-            minNode.recalcHeight()
+            // minNode.recalcHeight()
             
             node.right.offset += node.offset
-            return node.right
+            return {newNode: node.right, toBalance: minNode}
+
         } else if (node.left) {
             node.left.offset += node.offset
-            return node.left
+            return {newNode: node.left}
         } else if (node.right) {
             node.right.offset += node.offset            
-            return node.right
+            return {newNode: node.right}
         } else {
-            return undefined
+            return {newNode: undefined, toBalance: node.parent}
         }
     }
 

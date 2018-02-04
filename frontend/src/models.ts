@@ -208,7 +208,6 @@ export class StateModel {
             const initialText = data.text
 
 
-
             const inspectionNodeD: TextNodeData = {
                 text: initialText.slice(start, end),
                 isInspection: true
@@ -270,7 +269,7 @@ export class StateModel {
             return { diff }
         }
 
-        this.state.modify(state => {
+        this.state.modify(state => { //todo merge !inspection nodes  
             const { tree } = state;
             // let newInspections = inspections.shallowCopy()
             // newInspections.offset([diff!])
@@ -299,12 +298,10 @@ export class StateModel {
 
                 while (p.parent) {
 
-                    if (p.offset <= 0 && p.parent.offset > 0) {
+                    if (p.isLeft() && p.parent.isRight()) {
                         p.parent.offset += offsetDiff
-                    } else if (p.offset > 0 && p.parent.offset <= 0) {
-                        if (p.parent.parent) { //check if root
-                            p.parent.offset -= offsetDiff
-                        }
+                    } else if (p.isRight() && p.parent.isLeft()) {
+                        p.parent.offset -= offsetDiff
                     }
 
                     p = p.parent
