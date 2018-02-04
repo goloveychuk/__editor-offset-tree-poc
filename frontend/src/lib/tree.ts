@@ -359,16 +359,17 @@ export class Tree<T extends NodeRepresentable> {
         let left = findEnd - findStart
 
         let sub = text
-        while (node && left >= 0) {
+        while (node) {
             let end = Math.min(left+start, node.data.text.length)
-            // subEnd += end
             
             yield new ModifyNodeProxy(node, start, end, sub)
             left -= (end - start)
+            if (left <= 0){
+                return
+            }
             sub = ''
             start = 0
             node = node.rightLink
-
         }
     }
 
