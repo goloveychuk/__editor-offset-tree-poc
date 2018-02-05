@@ -25,7 +25,7 @@ export class TextNodeData {
 
     }
     canBeMerged() {
-        return this.isInspection === false
+        return this.isInspection !== true
     }
 }
 
@@ -251,9 +251,7 @@ export class StateModel {
             throw new Error('ins not found')
         }
         this.inspectionsIndex.delete(id)
-        if (node.wasDeleted) {
-            return
-        }
+
         this.state.modify(state => {
             const { tree } = state;
             const left = node.getLeft()
@@ -271,14 +269,14 @@ export class StateModel {
                 nodesToMerge.push(right)
             }
 
-            for (let i=0; i< nodesToMerge.length; i++) {
-                let next = nodesToMerge[i+1]
-                if (next === undefined) {
+            for (let i=nodesToMerge.length-1; i>= 0; i--) {
+                let prev = nodesToMerge[i-1]
+                if (prev === undefined) {
                     break
                 }
                 const cur = nodesToMerge[i]
-                new ModifyNodeProxy(cur).setText(cur.data.text.concat(next.data.text))
-                tree.removeNode(next)
+                new ModifyNodeProxy(prev).setText(prev.data.text.concat(cur.data.text))
+                tree.removeNode(cur)
             }
 
 
@@ -307,7 +305,7 @@ export class StateModel {
 
                 new ModifyNodeProxy(node).setText(newText)
 
-                if (node.data.text.length === 0) {
+                if (node.data.text.length === 0 && node.data.canBeMerged()) {
                     tree.removeNode(node)
                 }
 

@@ -15,7 +15,6 @@ export class Nodee<T> {
     height = 0
     offset: number
 
-    wasDeleted = false
 
     constructor(offset: number, data: T) {
         this.offset = offset
@@ -240,7 +239,6 @@ export class Tree<T> {
         return this._balanceUp(balancedNode.parent)
     }
     removeNode(node: Nodee<T>) {
-        node.wasDeleted = true
 
         if (node.leftLink) {
             node.leftLink.rightLink = node.rightLink

@@ -17,11 +17,11 @@ interface TextareaEditorProps {
 
 // const INITIAL_TEXT = 'some verqy long seqquency, ok maybe noott that longn'
 // const INITIAL_TEXT = 'some verqy veerre hello okaass think diffreent hereeq long seqquency, ok maybe noott that longn'
-// const INITIAL_TEXT = 'some verqy veerre hello okaass isas her ohllol think diffreent hereeq long seqquency, ok maybe noott that longn'
+const INITIAL_TEXT = 'some verqy veerre hello okaass isas her ohllol think diffreent hereeq long seqquency, ok maybe noott that longn'
 // const INITIAL_TEXT = 'some verqy veerre hello okaass isas her ohllol think diffreent hereeq lsda '
 // const INITIAL_TEXT = 'some ldqsdqsd'
 
-const INITIAL_TEXT = ''
+// const INITIAL_TEXT = 'sd                                   adfsf   '
 
 // todo balance bug remove from ohlol to end
 
