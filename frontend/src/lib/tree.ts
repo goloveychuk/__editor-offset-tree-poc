@@ -3,16 +3,20 @@ import { replaceRange } from '../utils'
 
 
 export class Nodee<T> {
+    parent?: Nodee<T>
+    
     left?: Nodee<T>
     right?: Nodee<T>
 
     leftLink?: Nodee<T>
     rightLink?: Nodee<T>
 
-    parent?: Nodee<T>
     data: T
     height = 0
     offset: number
+
+    wasDeleted = false
+
     constructor(offset: number, data: T) {
         this.offset = offset
         this.data = data
@@ -236,7 +240,7 @@ export class Tree<T> {
         return this._balanceUp(balancedNode.parent)
     }
     removeNode(node: Nodee<T>) {
-        
+        node.wasDeleted = true
 
         if (node.leftLink) {
             node.leftLink.rightLink = node.rightLink

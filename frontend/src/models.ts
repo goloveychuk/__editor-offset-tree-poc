@@ -251,6 +251,9 @@ export class StateModel {
             throw new Error('ins not found')
         }
         this.inspectionsIndex.delete(id)
+        if (node.wasDeleted) {
+            return
+        }
         this.state.modify(state => {
             const { tree } = state;
             const left = node.getLeft()
@@ -268,7 +271,7 @@ export class StateModel {
                 nodesToMerge.push(right)
             }
 
-            for (const i in nodesToMerge) {
+            for (let i=0; i< nodesToMerge.length; i++) {
                 let next = nodesToMerge[i+1]
                 if (next === undefined) {
                     break
