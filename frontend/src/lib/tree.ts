@@ -191,16 +191,9 @@ export class Tree<T> {
 
     insertRightForNode(node: Nodee<T>, insert: Nodee<T>) { //insert should be empty
         if (node.right !== undefined) {
-            // 
-            node.right.parent = insert
+            node.right.parent = insert            
+            insert.right = node.right
             node.right.offset -= insert.offset
-            if (node.isRight()) {
-                insert.right = node.right
-            } else if (node.isLeft()) {
-                insert.left = node.right
-            } else {
-                throw new Error('wtf')
-            }
             //todo mb rebalance
         }
         if (node.rightLink) {

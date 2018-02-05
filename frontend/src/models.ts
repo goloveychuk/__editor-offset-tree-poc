@@ -206,6 +206,7 @@ export class StateModel {
             if (res === undefined) {
                 throw new Error('cant find')
             }
+            const {tree} = state;
             const { node, start, end } = res
             const { data } = node;
 
@@ -218,18 +219,20 @@ export class StateModel {
             const initialText = data.text
 
 
+            node.data.text = node.data.text.slice(0, start)
+
+            
+
             const inspectionNodeD = new TextNodeData(initialText.slice(start, end), true)
 
             let inspectionNode: Nodee<TextNodeData>
 
-            data.text = data.text.slice(0, start) //todo offsets
-
-            if (data.text.length !== 0) {
+            if (data.text.length === 0) {
+                inspectionNode = node //todo check
+                node.data = inspectionNodeD
+            } else {
                 inspectionNode = new Nodee(start, inspectionNodeD)
                 state.tree.insertRightForNode(node, inspectionNode)
-            } else {
-                inspectionNode = node
-                node.data = inspectionNodeD
             }
 
             this.inspectionsIndex.set(ins.id, inspectionNode)
