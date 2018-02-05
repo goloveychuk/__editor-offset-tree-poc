@@ -269,7 +269,7 @@ export class StateModel {
                 nodesToMerge.push(right)
             }
 
-            for (let i=nodesToMerge.length-1; i>= 0; i--) {
+            for (let i=nodesToMerge.length-1; i> 0; i--) {
                 let prev = nodesToMerge[i-1]
                 if (prev === undefined) {
                     break

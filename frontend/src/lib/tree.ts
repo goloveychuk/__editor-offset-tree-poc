@@ -198,6 +198,8 @@ export class Tree<T> {
                 insert.right = node.right
             } else if (node.isLeft()) {
                 insert.left = node.right
+            } else {
+                throw new Error('wtf')
             }
             //todo mb rebalance
         }
@@ -233,6 +235,8 @@ export class Tree<T> {
                 balancedNode.parent.left = balancedNode
             } else if (balancedNode.isRight()) {
                 balancedNode.parent.right = balancedNode
+            } else {
+                throw new Error('wtf')
             }
         }
 
@@ -259,6 +263,8 @@ export class Tree<T> {
                 node.parent.left = newNode
             } else if (node.isRight()) {
                 node.parent.right = newNode
+            } else {
+                throw new Error('wtf')
             }
         }
         const nodeToBalance = toBalance || newNode

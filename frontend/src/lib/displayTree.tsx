@@ -2,7 +2,7 @@ import * as d3 from 'd3';
 import * as React from 'react';
 import { Tree, Nodee } from './tree'
 import { TextNodeData } from '../models';
-import {Atom, F, lift} from '@grammarly/focal'
+import { Atom, F, lift } from '@grammarly/focal'
 
 interface Data {
     data?: TextNodeData
@@ -76,13 +76,13 @@ function renderTree(containerSelector: string, treeData: Nodee<any>) {
     // adds the circle to the node
     node.append("circle")
         .attr("r", 50)
-        .style("fill", d=>{
+        .style("fill", d => {
             if (d.data._testGetHeight() !== d.data.height) {
                 return 'red'
             }
-            return d.data.data!.isInspection ? 'rgb(251, 222, 222)': null
+            return d.data.data!.isInspection ? 'rgb(251, 222, 222)' : null
         })
-        
+
 
     // adds the text to the node
     node.append("text")
@@ -102,12 +102,12 @@ function renderTree(containerSelector: string, treeData: Nodee<any>) {
             return `(${data._testComputeIndex()})`
         })
     node.append('text')
-    .style("text-anchor", "middle")
-    .attr("y", function (d) { return 25 })
-    .text((d) => {
-        const data = d.data;
-        return `comp/h: ${data._testGetHeight()} - ${data.height}`
-    })
+        .style("text-anchor", "middle")
+        .attr("y", function (d) { return 25 })
+        .text((d) => {
+            const data = d.data;
+            return `comp/h: ${data._testGetHeight()} - ${data.height}`
+        })
 
 
 }
@@ -118,18 +118,20 @@ interface Props {
     tree: Atom<Tree<TextNodeData>>
 }
 
+const ERROR_STYLES = { background: 'red' }
+
 function makeIndexesText(tree: Tree<TextNodeData>) {
     let res: React.ReactChild[] = []
     let indShould = 0
 
     for (const node of tree) {
         const ind = node._testComputeIndex()
-        let style = (ind !== indShould) ? {background: 'red'} : {};
-        
-        res.push(<span style={style}>{`(${ind}, ${ind+node.data.text.length}) - "${node.data.text}"`}</span>)
+        let style = (ind !== indShould) ? ERROR_STYLES : {};
 
-        indShould = ind+node.data.text.length
-        res.push(<br/>)
+        res.push(<span style={style}>{`(${ind}, ${ind + node.data.text.length}) - "${node.data.text}"`}</span>)
+
+        indShould = ind + node.data.text.length
+        res.push(<br />)
     }
     return res
 }
@@ -142,7 +144,7 @@ function isLeftRightCorrect(tree: Tree<TextNodeData>) {
         return false
     }
     for (const i in leftRight) {
-        if (leftRight[i] !== traverse[i]){
+        if (leftRight[i] !== traverse[i]) {
             return false
         }
     }
@@ -151,25 +153,32 @@ function isLeftRightCorrect(tree: Tree<TextNodeData>) {
 
 export class TreeRenderer extends React.Component<Props> {
     componentDidMount() {
-        const {tree} = this.props
-        tree.subscribe((tree)=> {    //TODO (move to lift)
-            const {root} = tree;
+        const { tree } = this.props
+        tree.subscribe((tree) => {    //TODO (move to lift)
+            const { root } = tree;
             if (root !== undefined) {
                 document.getElementById("tree")!.innerHTML = ""  //TODO
                 renderTree("#tree", root)
             }
-        })       
+        })
     }
     render() {
         const { tree } = this.props;
 
         return <div className='tree-container'>
             <div className='tree-debug'>
-            is balanced: <F.span>{tree.view(tree => String(tree._testIsBalanced(tree.root)))}</F.span>
-            <br/>
-            is left-right correct: <F.span>{tree.view(tree=>String(isLeftRightCorrect(tree)))}</F.span>
-            <br/>
-            <F.span>{tree.view(tree=> makeIndexesText(tree))}</F.span>
+                is balanced: <F.span>{tree.view(tree => {
+                    const res = tree._testIsBalanced(tree.root)
+                    return <span style={res ? {} : ERROR_STYLES}>{String(res)}</span>
+                })}
+                </F.span>
+                <br />
+                is linked correct: <F.span>{tree.view(tree => {
+                    const res = isLeftRightCorrect(tree)
+                    return <span style={res ? {} : ERROR_STYLES}>{String(res)}</span>
+                })}</F.span>
+                <br />
+                <F.span>{tree.view(tree => makeIndexesText(tree))}</F.span>
             </div>
             <div id='tree' />
         </div>
