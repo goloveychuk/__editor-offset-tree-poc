@@ -1,11 +1,8 @@
 import { replaceRange } from '../utils'
 
 
-interface NodeRepresentable {
-    text: string
-}
 
-export class Nodee<T extends NodeRepresentable> {
+export class Nodee<T> {
     left?: Nodee<T>
     right?: Nodee<T>
 
@@ -176,26 +173,12 @@ export class Nodee<T extends NodeRepresentable> {
 }
 
 
-class ModifyNodeProxy<T extends NodeRepresentable> {
 
-    constructor(public node: Nodee<T>, public start: number, public end: number, public substr: string) { }
-
-    applyText() {
-        const { node, start, end, substr } = this;
-
-        node.data.text = replaceRange(node.data.text, start, end, substr)
-
-        const offsetDiff = substr.length - (end - start)
-        node.offsetNode(offsetDiff)
-    }
-}
-
-
-export class Tree<T extends NodeRepresentable> {
+export class Tree<T> {
     root: Nodee<T>
     id = 1
-    shallowCopy() {
-        let tr = new Tree<T>(this.root)
+    shallowCopy(): this {
+        let tr = new (this.constructor as any)(this.root)
         tr.id = this.id + 1
         return tr
     }
@@ -253,10 +236,7 @@ export class Tree<T extends NodeRepresentable> {
         return this._balanceUp(balancedNode.parent)
     }
     removeNode(node: Nodee<T>) {
-        if (node.data.text.length !== 0) {
-            node.offsetNode(-node.data.text.length)
-            node.data.text = ''
-        }
+        
 
         if (node.leftLink) {
             node.leftLink.rightLink = node.rightLink
@@ -319,64 +299,7 @@ export class Tree<T extends NodeRepresentable> {
         return this._testIsBalanced(node.left) && this._testIsBalanced(node.right)
     }
 
-    _find(index: number) {
-        let ind = index
-        let p = this.root;
-
-        while (p !== undefined) {
-            ind -= p.offset
-            if (ind === 0) {
-                break
-            }
-            if (ind > 0) {
-                if (p.right === undefined) {
-                    break
-                }
-                if (ind < p.data.text.length) {
-                    break
-                }
-                p = p.right
-            } else if (ind < 0) {
-                if (p.left === undefined) {
-                    break
-                }
-                p = p.left
-            }
-
-        }
-        return { node: p, ind } //todo
-    }
-    findNodeByRange(start: number, end: number) {
-        let { node, ind } = this._find(start)
-        if (node === undefined) {
-            return
-        }
-        return {
-            node, start: ind, end: end - start + ind,
-        }
-    }
-    *modify(findStart: number, findEnd: number, text: string): IterableIterator<ModifyNodeProxy<T>> {
-        let { node: startNode, ind } = this._find(findStart)
-
-
-        let node: Nodee<T> | undefined = startNode
-        let start = ind
-        let left = findEnd - findStart
-
-        let sub = text
-        while (node) {
-            let end = Math.min(left + start, node.data.text.length)
-
-            yield new ModifyNodeProxy(node, start, end, sub)
-            left -= (end - start)
-            if (left <= 0) {
-                return
-            }
-            sub = ''
-            start = 0
-            node = node.rightLink
-        }
-    }
+   
 
     _testTraverse() {
         function* helper(node?: Nodee<T>): IterableIterator<Nodee<T>> {

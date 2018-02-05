@@ -32,7 +32,7 @@ export class TextNodeData {
 
 export class State {
 
-    tree = new Tree<TextNodeData>(new Nodee<TextNodeData>(0, new TextNodeData('', false)))
+    tree = new InspectionsTree(new Nodee<TextNodeData>(0, new TextNodeData('', false)))
     text: string
     cursorPosition: number
     constructor({ text }: { text: string }) {
@@ -74,104 +74,88 @@ class RevisionsData {
 export type NodesForView = OrderedMap<string, TextNodeData>
 
 
+class ModifyNodeProxy {
 
-// class Inspections {
-//     private inspections: Inspection[]
-//     private idIndex: Map<number, Inspection>
-//     constructor() {
-//         this.inspections = []
-//         this.idIndex = new Map()
+    constructor(public node: Nodee<TextNodeData>, public start: number, public end: number, public substr: string) { }
 
-//     }
-//     shallowCopy() {
-//         const newIns = new Inspections()
-//         newIns.inspections = this.inspections
-//         newIns.idIndex = this.idIndex
-//         return newIns
-//     }
-//     private static _offset(inspections: Inspection[], diffs: Diff[]) {
-//         for (const ins of inspections) {
-//             let newStart = ins.start
-//             let newEnd = ins.end
+    applyText() {
+        const { node, start, end, substr } = this;
 
-//             for (const diff of diffs) {
-//                 const offset = diff.text.length - (diff.end - diff.start);
+        node.data.text = replaceRange(node.data.text, start, end, substr)
 
-//                 if (diff.start <= newStart && diff.end <= newEnd) {
-//                     newStart += offset
-//                     newEnd += offset
-//                 } else if (diff.start > newStart && diff.end < newEnd) {
-//                     newEnd += offset
-//                 } else {
-//                     continue
-//                 }
-//             }
-//             if (newStart === ins.start && newEnd === ins.end) {
-//                 continue
-//             }
-//             ins.start = newStart
-//             ins.end = newEnd
-//         }
-//     }
-//     offset(diffs: Diff[]) {
-//         Inspections._offset(this.inspections, diffs)
-//     }
-//     add(inspection: Inspection, revisionsData: RevisionsData) {  //todo O(logn)
-//         const diffs = revisionsData.getDiffs(inspection.rev)
-
-//         Inspections._offset([inspection], diffs)
-
-//         const newInspections = [inspection].concat(this.inspections)
-//         newInspections.sort((a, b) => a.start - b.start)
-//         this.inspections = newInspections
-//         this.idIndex.set(inspection.id, inspection)
-//     }
-//     remove(id: number) { //todo o(1)
-//         this.inspections = this.inspections.filter(ins => ins.id !== id)
-//         this.idIndex.delete(id)
-//     }
-//     textNodes(text: string, cursorPosition: number, cb: (id: string, text: string, isInspection?: boolean, highlighted?: boolean) => void) {
-//         let lastInsInd = 0
-//         for (const ins of this) {
-//             if (ins.start !== lastInsInd) {
-//                 cb(`${ins.id}#`, text.substring(lastInsInd, ins.start))
-//             }
-//             const highlighted = cursorPosition >= ins.start && cursorPosition <= ins.end
-
-//             cb(ins.id.toString(), text.substring(ins.start, ins.end), true, highlighted)
-//             lastInsInd = ins.end;
-//         }
-//         if (lastInsInd !== text.length) {
-//             cb('last', text.substring(lastInsInd))
-//         }
-//     }
-//     [Symbol.iterator]() {
-//         return this.inspections[Symbol.iterator]()
-//     }
-//     map<T>(cb: (ins: Inspection, ind: number)=>T) {
-//         return this.inspections.map(cb)
-//     }
-//     getById(id: number) {
-//         return this.idIndex.get(id)
-//     }
-// }
-
-// class InspectionProxy {
-
-//     constructor(public inspections: Inspections, private revisionsData: RevisionsData) {
-
-//     }
-//     add(inspection: Inspection) {
-//         this.inspections.add(inspection, this.revisionsData)
-//         return this
-//     }
-//     remove(id: number) {
-//         this.inspections.remove(id)
-//         return this
-//     }
-// }
+        const offsetDiff = substr.length - (end - start)
+        node.offsetNode(offsetDiff)
+    }
+}
 
 
+class InspectionsTree extends Tree<TextNodeData> {
+    *modify(findStart: number, findEnd: number, text: string): IterableIterator<ModifyNodeProxy> {
+        let { node: startNode, ind } = this._find(findStart)
+
+
+        let node: Nodee<TextNodeData> | undefined = startNode
+        let start = ind
+        let left = findEnd - findStart
+
+        let sub = text
+        while (node) {
+            let end = Math.min(left + start, node.data.text.length)
+
+            yield new ModifyNodeProxy(node, start, end, sub)
+            left -= (end - start)
+            if (left <= 0) {
+                return
+            }
+            sub = ''
+            start = 0
+            node = node.rightLink
+        }
+    }
+    removeNode(node: Nodee<TextNodeData>) {
+        if (node.data.text.length !== 0) {
+            node.offsetNode(-node.data.text.length)
+            node.data.text = ''
+        }
+        super.removeNode(node)
+    }
+    _find(index: number) {
+        let ind = index
+        let p = this.root;
+
+        while (p !== undefined) {
+            ind -= p.offset
+            if (ind === 0) {
+                break
+            }
+            if (ind > 0) {
+                if (p.right === undefined) {
+                    break
+                }
+                if (ind < p.data.text.length) {
+                    break
+                }
+                p = p.right
+            } else if (ind < 0) {
+                if (p.left === undefined) {
+                    break
+                }
+                p = p.left
+            }
+
+        }
+        return { node: p, ind } //todo
+    }
+    findNodeByRange(start: number, end: number) {
+        let { node, ind } = this._find(start)
+        if (node === undefined) {
+            return
+        }
+        return {
+            node, start: ind, end: end - start + ind,
+        }
+    }
+}
 
 export class StateModel {
     state: Atom<State>
@@ -184,13 +168,6 @@ export class StateModel {
         this.state = Atom.create(new State({ text }))
     }
 
-    // modifyInspections(cb: (ins: InspectionProxy) => InspectionProxy) {
-    //     this.state.lens('inspections').modify(inspections => {
-    //         const newInspections = inspections.shallowCopy()
-    //         cb(new InspectionProxy(newInspections, this.revisionsData))
-    //         return newInspections
-    //     })
-    // }
     reset() {
         // this.revisionsData = new RevisionsData()
         // this.state.lens('inspections').set(new Inspections())
@@ -278,7 +255,7 @@ export class StateModel {
             const { tree } = state;
             // let newInspections = inspections.shallowCopy()
             // newInspections.offset([diff!])
-            // // validateDiff(text, newText, diff)
+
             diff = diff!
 
             for (const proxy of tree.modify(diff.start, diff.end, diff.text)) {
