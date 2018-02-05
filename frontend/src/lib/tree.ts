@@ -144,6 +144,15 @@ export class Nodee<T> {
         }
         return node
     }
+    getMinNodeWithOffset() {
+        let node: Nodee<T> = this;
+        let offset = node.offset
+        while (node.left) {
+            node = node.left
+            offset+=node.offset
+        }
+        return {node, offset}
+    }
     isLeft() {
         return this.offset <= 0 && this.parent
     }
@@ -190,12 +199,7 @@ export class Tree<T> {
     }
 
     insertRightForNode(node: Nodee<T>, insert: Nodee<T>) { //insert should be empty
-        if (node.right !== undefined) {
-            node.right.parent = insert            
-            insert.right = node.right
-            node.right.offset -= insert.offset
-            //todo mb rebalance
-        }
+        
         if (node.rightLink) {
             node.rightLink.leftLink = insert
             insert.rightLink = node.rightLink
@@ -204,8 +208,16 @@ export class Tree<T> {
         node.rightLink = insert
         insert.leftLink = node
 
-        node.right = insert
-        insert.parent = node
+        if (node.right !== undefined) {
+            const {node: veryLeft, offset} = node.right.getMinNodeWithOffset()
+            veryLeft.left = insert
+            insert.parent = veryLeft
+            insert.offset -= offset  
+            //todo rebalance
+        } else {
+            node.right = insert
+            insert.parent = node
+        }
 
         let p: Nodee<T> | undefined = node
         this.root = this._balanceUp(insert)
