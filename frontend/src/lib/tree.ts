@@ -253,6 +253,11 @@ export class Tree<T extends NodeRepresentable> {
         return this._balanceUp(balancedNode.parent)
     }
     removeNode(node: Nodee<T>) {
+        if (node.data.text.length !== 0) {
+            node.offsetNode(-node.data.text.length)
+            node.data.text = ''
+        }
+
         if (node.leftLink) {
             node.leftLink.rightLink = node.rightLink
         }
@@ -350,9 +355,9 @@ export class Tree<T extends NodeRepresentable> {
             node, start: ind, end: end - start + ind,
         }
     }
-    *findByRange(findStart: number, findEnd: number, text: string): IterableIterator<ModifyNodeProxy<T>> {
+    *modify(findStart: number, findEnd: number, text: string): IterableIterator<ModifyNodeProxy<T>> {
         let { node: startNode, ind } = this._find(findStart)
-        
+
 
         let node: Nodee<T> | undefined = startNode
         let start = ind
@@ -360,11 +365,11 @@ export class Tree<T extends NodeRepresentable> {
 
         let sub = text
         while (node) {
-            let end = Math.min(left+start, node.data.text.length)
-            
+            let end = Math.min(left + start, node.data.text.length)
+
             yield new ModifyNodeProxy(node, start, end, sub)
             left -= (end - start)
-            if (left <= 0){
+            if (left <= 0) {
                 return
             }
             sub = ''

@@ -20,15 +20,19 @@ export interface Inspection {
     rev: number
 }
 
-export interface TextNodeData {
-    text: string
-    isInspection?: boolean
+export class TextNodeData {
+    constructor(public text: string, public isInspection: boolean) {
+
+    }
+    canBeMerged() {
+        return this.isInspection === false
+    }
 }
 
 
 export class State {
 
-    tree = new Tree<TextNodeData>(new Nodee<TextNodeData>(0, { text: '' }))
+    tree = new Tree<TextNodeData>(new Nodee<TextNodeData>(0, new TextNodeData('', false)))
     text: string
     cursorPosition: number
     constructor({ text }: { text: string }) {
@@ -208,10 +212,7 @@ export class StateModel {
             const initialText = data.text
 
 
-            const inspectionNodeD: TextNodeData = {
-                text: initialText.slice(start, end),
-                isInspection: true
-            }
+            const inspectionNodeD = new TextNodeData(initialText.slice(start, end), true)
 
             let inspectionNode: Nodee<TextNodeData>
 
@@ -228,9 +229,7 @@ export class StateModel {
             this.inspectionsIndex.set(ins.id, inspectionNode)
 
 
-            const rightNodeD: TextNodeData = {
-                text: initialText.slice(end)
-            }
+            const rightNodeD = new TextNodeData(initialText.slice(end), false)
 
             if (rightNodeD.text.length !== 0) {
                 const rightNode = new Nodee(end - start, rightNodeD)
@@ -249,16 +248,22 @@ export class StateModel {
         this.state.modify(state => {
             const { tree } = state;
             const left = node.getLeft()
-            if (left !== undefined && !left.data.isInspection) {
-                left.data.text = left.data.text.concat(node.data.text)
-                const leftRight = left.getRight()
-                if (leftRight !== undefined) {
-                    leftRight.offset += node.data.text.length;
-                }
-                // tree.removeNode(node)
+            let nodeToMerge = node //todo rewrite
 
-                // const leftLeft 
+            if (left !== undefined && left.data.canBeMerged()) {
+                left.data.text = left.data.text.concat(nodeToMerge.data.text)
+                left.offsetNode(nodeToMerge.data.text.length)
+                tree.removeNode(nodeToMerge)
+                nodeToMerge = left
             }
+
+            const right = node.getRight()
+            if (right !== undefined && right.data.canBeMerged()) {
+                nodeToMerge.data.text = nodeToMerge.data.text.concat(right.data.text)
+                nodeToMerge.offsetNode(right.data.text.length)
+                tree.removeNode(right)
+            }
+            
             return Object.assign({}, state, { tree: state.tree.shallowCopy() })
         })
     }
@@ -276,7 +281,7 @@ export class StateModel {
             // // validateDiff(text, newText, diff)
             diff = diff!
 
-            for (const proxy of tree.findByRange(diff.start, diff.end, diff.text)) {
+            for (const proxy of tree.modify(diff.start, diff.end, diff.text)) {
              
 
                 const {node} = proxy

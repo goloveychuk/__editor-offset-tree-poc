@@ -70,17 +70,20 @@ export class RootView extends React.Component<{}, State> {
         if (responses.length === 0) {
             return
         }
-        if (this.disableApi) {
-            return
-        }
+        // if (this.disableApi) {
+        //     return
+        // }
         for (const resp of responses) {
             console.log(resp)
             switch (resp.type) {
                 case Response.Type.AddInspection:
+                    // if (this.disableApi) {
+                    //     continue
+                    // }
                     this.state.viewModel.addInspection(resp)
                     break;
                 case Response.Type.RemoveInspection:
-                    // this.state.viewModel.removeInspection(resp.id)
+                    this.state.viewModel.removeInspection(resp.id)
                     break;
                 case Response.Type.Ok:
                     this.state.viewModel.revisionsData.removeDiffs(resp.rev)
