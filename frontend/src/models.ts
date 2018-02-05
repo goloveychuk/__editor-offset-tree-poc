@@ -76,21 +76,22 @@ export type NodesForView = OrderedMap<string, TextNodeData>
 
 class ModifyNodeProxy {
 
-    constructor(public node: Nodee<TextNodeData>, public start: number, public end: number, public substr: string) { }
+    constructor(public node: Nodee<TextNodeData>) { }
 
-    applyText() {
-        const { node, start, end, substr } = this;
+    setText(text: string) {
+        const { node } = this;
 
-        node.data.text = replaceRange(node.data.text, start, end, substr)
+        const offset = text.length - node.data.text.length
 
-        const offsetDiff = substr.length - (end - start)
-        node.offsetNode(offsetDiff)
+        node.data.text = text
+
+        node.offsetNode(offset)
     }
 }
 
 
 class InspectionsTree extends Tree<TextNodeData> {
-    *modify(findStart: number, findEnd: number, text: string): IterableIterator<ModifyNodeProxy> {
+    *modify(findStart: number, findEnd: number, text: string) {
         let { node: startNode, ind } = this._find(findStart)
 
 
@@ -102,7 +103,7 @@ class InspectionsTree extends Tree<TextNodeData> {
         while (node) {
             let end = Math.min(left + start, node.data.text.length)
 
-            yield new ModifyNodeProxy(node, start, end, sub)
+            yield {node, start, end, sub}
             left -= (end - start)
             if (left <= 0) {
                 return
@@ -114,8 +115,7 @@ class InspectionsTree extends Tree<TextNodeData> {
     }
     removeNode(node: Nodee<TextNodeData>) {
         if (node.data.text.length !== 0) {
-            node.offsetNode(-node.data.text.length)
-            node.data.text = ''
+            new ModifyNodeProxy(node).setText("")
         }
         super.removeNode(node)
     }
@@ -157,6 +157,32 @@ class InspectionsTree extends Tree<TextNodeData> {
     }
 }
 
+function offsetInspection(ins: Inspection, diffs: Diff[]) {
+
+    let newStart = ins.start
+    let newEnd = ins.end
+
+    for (const diff of diffs) {
+        const offset = diff.text.length - (diff.end - diff.start);
+
+        if (diff.start <= newStart && diff.end <= newEnd) {
+            newStart += offset
+            newEnd += offset
+        } else if (diff.start > newStart && diff.end < newEnd) {
+            newEnd += offset
+        } else {
+            continue
+        }
+    }
+    if (newStart === ins.start && newEnd === ins.end) {
+        return ins
+    }
+    return Object.assign({}, ins, { start: newStart, end: newEnd })
+
+
+}
+
+
 export class StateModel {
     state: Atom<State>
     revisionsData = new RevisionsData()
@@ -173,8 +199,9 @@ export class StateModel {
         // this.state.lens('inspections').set(new Inspections())
     }
 
-    addInspection(ins: Inspection) {
+    addInspection(_ins: Inspection) {
         this.state.modify(state => {
+            const ins = offsetInspection(_ins, this.revisionsData.getDiffs(_ins.rev))
             const res = state.tree.findNodeByRange(ins.start, ins.end)
             if (res === undefined) {
                 throw new Error('cant find')
@@ -228,19 +255,17 @@ export class StateModel {
             let nodeToMerge = node //todo rewrite
 
             if (left !== undefined && left.data.canBeMerged()) {
-                left.data.text = left.data.text.concat(nodeToMerge.data.text)
-                left.offsetNode(nodeToMerge.data.text.length)
+                new ModifyNodeProxy(left).setText(left.data.text.concat(nodeToMerge.data.text))
                 tree.removeNode(nodeToMerge)
                 nodeToMerge = left
             }
 
             const right = node.getRight()
             if (right !== undefined && right.data.canBeMerged()) {
-                nodeToMerge.data.text = nodeToMerge.data.text.concat(right.data.text)
-                nodeToMerge.offsetNode(right.data.text.length)
+                new ModifyNodeProxy(nodeToMerge).setText(nodeToMerge.data.text.concat(right.data.text))
                 tree.removeNode(right)
             }
-            
+
             return Object.assign({}, state, { tree: state.tree.shallowCopy() })
         })
     }
@@ -258,11 +283,13 @@ export class StateModel {
 
             diff = diff!
 
-            for (const proxy of tree.modify(diff.start, diff.end, diff.text)) {
-             
+            for (const {node, start, end, sub} of tree.modify(diff.start, diff.end, diff.text)) {
 
-                const {node} = proxy
-                proxy.applyText()
+
+                const newText = replaceRange(node.data.text, start, end, sub)
+
+
+                new ModifyNodeProxy(node).setText(newText)
 
                 if (node.data.text.length === 0) {
                     tree.removeNode(node)
