@@ -210,7 +210,9 @@ export class StateModel {
             const { data } = node;
 
             if (data.isInspection) {
-                throw new Error('smth wrong')
+                // debugger;
+                console.warn('node is inspection')
+                // throw new Error('smth wrong')
             }
 
             const initialText = data.text
@@ -252,19 +254,30 @@ export class StateModel {
         this.state.modify(state => {
             const { tree } = state;
             const left = node.getLeft()
-            let nodeToMerge = node //todo rewrite
+            let nodesToMerge = []
+
+            node.data.isInspection = false
 
             if (left !== undefined && left.data.canBeMerged()) {
-                new ModifyNodeProxy(left).setText(left.data.text.concat(nodeToMerge.data.text))
-                tree.removeNode(nodeToMerge)
-                nodeToMerge = left
+                nodesToMerge.push(left)
             }
+            nodesToMerge.push(node)
 
             const right = node.getRight()
             if (right !== undefined && right.data.canBeMerged()) {
-                new ModifyNodeProxy(nodeToMerge).setText(nodeToMerge.data.text.concat(right.data.text))
-                tree.removeNode(right)
+                nodesToMerge.push(right)
             }
+
+            for (const i in nodesToMerge) {
+                let next = nodesToMerge[i+1]
+                if (next === undefined) {
+                    break
+                }
+                const cur = nodesToMerge[i]
+                new ModifyNodeProxy(cur).setText(cur.data.text.concat(next.data.text))
+                tree.removeNode(next)
+            }
+
 
             return Object.assign({}, state, { tree: state.tree.shallowCopy() })
         })
