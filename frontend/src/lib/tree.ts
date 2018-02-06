@@ -4,7 +4,7 @@ import { replaceRange } from '../utils'
 
 export class Nodee<T> {
     parent?: Nodee<T>
-    
+
     left?: Nodee<T>
     right?: Nodee<T>
 
@@ -149,9 +149,9 @@ export class Nodee<T> {
         let offset = node.offset
         while (node.left) {
             node = node.left
-            offset+=node.offset
+            offset += node.offset
         }
-        return {node, offset}
+        return { node, offset }
     }
     isLeft() {
         return this.offset <= 0 && this.parent
@@ -199,7 +199,7 @@ export class Tree<T> {
     }
 
     insertRightForNode(node: Nodee<T>, insert: Nodee<T>) { //insert should be empty
-        
+
         if (node.rightLink) {
             node.rightLink.leftLink = insert
             insert.rightLink = node.rightLink
@@ -209,19 +209,15 @@ export class Tree<T> {
         insert.leftLink = node
 
         if (node.right !== undefined) {
-            const {node: veryLeft, offset} = node.right.getMinNodeWithOffset()
+            const { node: veryLeft, offset } = node.right.getMinNodeWithOffset()
             veryLeft.left = insert
             insert.parent = veryLeft
-            insert.offset -= offset  
-            //todo rebalance
+            insert.offset -= offset
         } else {
             node.right = insert
             insert.parent = node
         }
-
-        let p: Nodee<T> | undefined = node
-        this.root = this._balanceUp(insert)
-
+        this.root = this._balanceUp(insert)            
     }
 
     _balanceUp(node: Nodee<T>): Nodee<T> {
@@ -312,7 +308,7 @@ export class Tree<T> {
         return this._testIsBalanced(node.left) && this._testIsBalanced(node.right)
     }
 
-   
+
 
     _testTraverse() {
         function* helper(node?: Nodee<T>): IterableIterator<Nodee<T>> {
